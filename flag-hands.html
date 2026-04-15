@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cờ VN — hạt &amp; bàn tay (Three.js + MediaPipe)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ui: rgba(8, 10, 18, 0.82);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #e8ecf4;
+      --muted: #9aa3b8;
+      --accent: #da251d;
+      --gold: #ffcd00;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: #020308;
+      color: var(--text);
+      font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+    }
+    #canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+    }
+    /* Video vẫn chạy cho MediaPipe nhưng không hiển thị trên giao diện */
+    #webcam {
+      position: fixed;
+      left: -9999px;
+      top: 0;
+      width: 320px;
+      height: 240px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: -1;
+      transform: scaleX(-1);
+      object-fit: cover;
+    }
+    #ui {
+      position: fixed;
+      left: 12px;
+      top: 12px;
+      max-width: min(420px, 92vw);
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: var(--ui);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      z-index: 3;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    #ui h1 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: 0.02em;
+    }
+    .hints {
+      list-style: none;
+      margin: 0 0 10px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .hints li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+    .hints .ic {
+      flex-shrink: 0;
+      width: 1.75rem;
+      text-align: center;
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+    .hints li span:last-child { color: var(--text); opacity: 0.92; }
+    #status {
+      font-size: 12px;
+      color: var(--gold);
+      margin-top: 6px;
+      min-height: 1.4em;
+    }
+    #btn {
+      margin-top: 10px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 13px;
+      background: linear-gradient(135deg, var(--accent), #8b1010);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(218, 37, 29, 0.35);
+    }
+    #btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    #back {
+      display: inline-block;
+      margin-top: 8px;
+      color: #7dd3fc;
+      text-decoration: none;
+      font-size: 12px;
+    }
+    #back:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <video id="webcam" playsinline muted aria-hidden="true"></video>
+  <div id="ui">
+    <h1>Cờ VN — điều khiển bằng tay</h1>
+    <ul class="hints" aria-label="Gợi ý cử chỉ">
+      <li><span class="ic" aria-hidden="true">✊</span><span>Tụ cờ — <strong>một tay</strong> nắm đấm (hai tay trong khung = tim)</span></li>
+      <li><span class="ic" aria-hidden="true">✋</span><span>Tản + vòng ảnh · xoay tay = xoay vòng</span></li>
+      <li><span class="ic" aria-hidden="true">↔</span><span>Hất ngang nhanh · xung hạt</span></li>
+      <li><span class="ic" aria-hidden="true">🫶</span><span><strong>Hai tay</strong> trong khung (cổ tay tách vừa) → tim + I LOVE VIET NAM</span></li>
+    </ul>
+    <button type="button" id="btn">Bật camera &amp; bắt đầu</button>
+    <div id="status"></div>
+    <a id="back" href="index.html">← Về slide chính</a>
+  </div>
+
+  <script type="module">
+    import * as THREE from "https://unpkg.com/three@0.160.0/build/three.module.js";
+    import { HandLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
+
+    const MP_VER = "0.10.14";
+    const WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm`;
+    const MODEL = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/latest/hand_landmarker.task";
+
+    /** Lưới cờ đầy: nx×ny = N (tăng mật độ → tản ra đẹp hơn) */
+    const nx = 84;
+    const ny = 52;
+    const N = nx * ny;
+    /** Đỏ / vàng đậm, bão hòa — additive + clamp vẫn giữ sắc rõ */
+    const RED = new THREE.Color(0xb80710);
+    const GOLD = new THREE.Color(0xffb200);
+
+    const canvas = document.getElementById("canvas");
+    const video = document.getElementById("webcam");
+    const btn = document.getElementById("btn");
+    const statusEl = document.getElementById("status");
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x020308, 1);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 100);
+    camera.position.z = 4.2;
+
+    const geom = new THREE.BufferGeometry();
+    const pos = new Float32Array(N * 3);
+    const vel = new Float32Array(N * 3);
+    const tgt = new Float32Array(N * 3);
+    const col = new Float32Array(N * 3);
+    const baseCol = new Float32Array(N * 3);
+    const rnd = new Float32Array(N * 3);
+
+    for (let i = 0; i < N; i++) {
+      const i3 = i * 3;
+      const u = Math.random() * Math.PI * 2;
+      const v = Math.acos(2 * Math.random() - 1);
+      const r = 2.2 + Math.random() * 1.8;
+      pos[i3] = r * Math.sin(v) * Math.cos(u);
+      pos[i3 + 1] = r * Math.sin(v) * Math.sin(u);
+      pos[i3 + 2] = r * Math.cos(v) * 0.6;
+      vel[i3] = vel[i3 + 1] = vel[i3 + 2] = 0;
+      rnd[i3] = (Math.random() - 0.5) * 2;
+      rnd[i3 + 1] = (Math.random() - 0.5) * 2;
+      rnd[i3 + 2] = (Math.random() - 0.5) * 2;
+    }
+
+    /**
+     * Sao 5 cánh đều {5/2}: đỉnh ngoài cách 144°, đỉnh trong ở giữa hai đỉnh ngoài (+72°).
+     * Bán kính trong chuẩn: sin(18°)/sin(54°) = 1/φ² (φ tỉ số vàng).
+     */
+    function starPolygon(cx, cy, R) {
+      const inner = R * (Math.sin(Math.PI / 10) / Math.sin((3 * Math.PI) / 10));
+      const verts = [];
+      for (let i = 0; i < 5; i++) {
+        const oa = Math.PI / 2 + i * ((4 * Math.PI) / 5);
+        verts.push([cx + R * Math.cos(oa), cy + R * Math.sin(oa)]);
+        const ia = oa + (2 * Math.PI) / 5;
+        verts.push([cx + inner * Math.cos(ia), cy + inner * Math.sin(ia)]);
+      }
+      return verts;
+    }
+
+    /** Non-zero winding: ổn định hơn even-odd với đa giác sao */
+    function pointInPolygonWinding(x, y, poly) {
+      let wn = 0;
+      const n = poly.length;
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        const yi = poly[i][1];
+        const yj = poly[j][1];
+        const xi = poly[i][0];
+        const xj = poly[j][0];
+        const isLeft = (xj - xi) * (y - yi) - (x - xi) * (yj - yi);
+        if (yi <= y) {
+          if (yj > y && isLeft > 0) wn++;
+        } else if (yj <= y && isLeft < 0) {
+          wn--;
+        }
+      }
+      return wn !== 0;
+    }
+
+    function inStarRegion(x, y, poly) {
+      return pointInPolygonWinding(x, y, poly);
+    }
+
+    function buildFlagTargets() {
+      const W = 2.85;
+      const H = (W * 2) / 3;
+      const starR = H * 0.34;
+      const poly = starPolygon(0, 0, starR);
+      const pts = [];
+      const colors = [];
+
+      for (let j = 0; j < ny; j++) {
+        for (let i = 0; i < nx; i++) {
+          const x = ((i + 0.5) / nx - 0.5) * W;
+          const y = ((j + 0.5) / ny - 0.5) * H;
+          const inStar = inStarRegion(x, y, poly);
+          pts.push(x, y, 0);
+          let c = inStar ? GOLD.clone() : RED.clone();
+          if (inStar) {
+            c.lerp(new THREE.Color(1, 0.95, 0.45), 0.06);
+            c.multiplyScalar(1.28);
+          } else {
+            c.lerp(new THREE.Color(1, 0.22, 0.28), 0.08);
+            c.multiplyScalar(1.24);
+          }
+          colors.push(Math.min(1, c.r), Math.min(1, c.g), Math.min(1, c.b));
+        }
+      }
+
+      if (pts.length !== N * 3) {
+        console.error("Số hạt không khớp lưới cờ", pts.length / 3, N);
+      }
+
+      return { positions: new Float32Array(pts), colors: new Float32Array(colors) };
+    }
+
+    const flagData = buildFlagTargets();
+    const flagTgt = new Float32Array(flagData.positions);
+
+    function buildHeartOutlinePoly() {
+      const sc = 0.152;
+      const oy = 0.2;
+      const verts = [];
+      for (let k = 0; k < 96; k++) {
+        const t = (k / 96) * Math.PI * 2;
+        const hx = 16 * Math.sin(t) ** 3;
+        const hy =
+          13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
+        verts.push([hx * sc, hy * sc + oy]);
+      }
+      return verts;
+    }
+
+    function buildHeartTargets() {
+      const poly = buildHeartOutlinePoly();
+      let cx = 0;
+      let cy = 0;
+      for (const p of poly) {
+        cx += p[0];
+        cy += p[1];
+      }
+      cx /= poly.length;
+      cy /= poly.length;
+      let minx = 1e9;
+      let maxx = -1e9;
+      let miny = 1e9;
+      let maxy = -1e9;
+      for (const p of poly) {
+        minx = Math.min(minx, p[0]);
+        maxx = Math.max(maxx, p[0]);
+        miny = Math.min(miny, p[1]);
+        maxy = Math.max(maxy, p[1]);
+      }
+      const pad = 0.04;
+      minx -= pad;
+      maxx += pad;
+      miny -= pad;
+      maxy += pad;
+      const bw = maxx - minx;
+      const bh = maxy - miny;
+
+      const pts = [];
+      const colors = [];
+      const pink = new THREE.Color(0xff5c8a);
+      const redh = new THREE.Color(0xd41234);
+      let tries = 0;
+      let got = 0;
+      while (got < N && tries < N * 450) {
+        tries++;
+        let x;
+        let y;
+        if (Math.random() < 0.55) {
+          x = minx + Math.random() * bw;
+          y = miny + Math.random() * bh;
+        } else {
+          x = cx + (Math.random() - 0.5) * bw * 0.62;
+          y = cy + (Math.random() - 0.5) * bh * 0.62;
+        }
+        if (!pointInPolygonWinding(x, y, poly)) continue;
+        pts.push(x, y, 0);
+        const c = got % 8 === 0 ? GOLD.clone() : got % 4 === 0 ? pink.clone() : redh.clone();
+        c.multiplyScalar(0.9 + Math.random() * 0.18);
+        colors.push(Math.min(1, c.r), Math.min(1, c.g), Math.min(1, c.b));
+        got++;
+      }
+      let fill = 0;
+      while (pts.length < N * 3 && fill < N * 12) {
+        fill++;
+        const x = cx + (Math.random() - 0.5) * bw * 0.5;
+        const y = cy + (Math.random() - 0.5) * bh * 0.55;
+        if (!pointInPolygonWinding(x, y, poly)) continue;
+        pts.push(x, y, 0);
+        const gi = (pts.length / 3) | 0;
+        const c = gi % 8 === 0 ? GOLD.clone() : gi % 4 === 0 ? pink.clone() : redh.clone();
+        c.multiplyScalar(0.9 + Math.random() * 0.18);
+        colors.push(Math.min(1, c.r), Math.min(1, c.g), Math.min(1, c.b));
+      }
+      while (pts.length < N * 3) {
+        const t = (pts.length / 3) * 0.37;
+        const x = cx + Math.sin(t) * bw * 0.22;
+        const y = cy + Math.cos(t * 1.3) * bh * 0.22;
+        pts.push(x, y, 0);
+        colors.push(1, 0.38, 0.55);
+      }
+      return { positions: new Float32Array(pts), colors: new Float32Array(colors) };
+    }
+
+    const heartData = buildHeartTargets();
+    const heartTgt = new Float32Array(heartData.positions);
+    const heartBaseCol = new Float32Array(heartData.colors);
+
+    for (let i = 0; i < N * 3; i++) {
+      baseCol[i] = flagData.colors[i];
+      tgt[i] = pos[i];
+    }
+
+    geom.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geom.setAttribute("color", new THREE.BufferAttribute(col, 3));
+
+    function createSoftParticleTexture() {
+      const sz = 128;
+      const cv = document.createElement("canvas");
+      cv.width = sz;
+      cv.height = sz;
+      const g = cv.getContext("2d");
+      const cx = sz / 2;
+      const rg = g.createRadialGradient(cx, cx, 0, cx, cx, sz * 0.5);
+      rg.addColorStop(0, "rgba(255,255,255,1)");
+      rg.addColorStop(0.18, "rgba(255,255,255,0.72)");
+      rg.addColorStop(0.45, "rgba(255,248,240,0.22)");
+      rg.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = rg;
+      g.fillRect(0, 0, sz, sz);
+      const tex = new THREE.CanvasTexture(cv);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      return tex;
+    }
+
+    const particleMap = createSoftParticleTexture();
+    const mat = new THREE.PointsMaterial({
+      size: 0.09,
+      map: particleMap,
+      vertexColors: true,
+      transparent: true,
+      opacity: 1,
+      depthWrite: false,
+      depthTest: true,
+      blending: THREE.AdditiveBlending,
+      sizeAttenuation: true,
+    });
+    const points = new THREE.Points(geom, mat);
+    scene.add(points);
+
+    /** Chữ VIET NAM sáng — sprite con của cờ, xoay cùng hạt */
+    function createVietNamTitleSprite() {
+      const cw = 1536;
+      const ch = 384;
+      const c = document.createElement("canvas");
+      c.width = cw;
+      c.height = ch;
+      const ctx = c.getContext("2d");
+      const cx = cw / 2;
+      const cy = ch / 2;
+      const text = "VIET NAM";
+      ctx.font = '800 132px "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (let blur = 48; blur >= 6; blur -= 6) {
+        ctx.shadowColor = "rgba(255, 205, 60, 0.55)";
+        ctx.shadowBlur = blur;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.fillStyle = "rgba(255, 200, 0, 0.12)";
+        ctx.fillText(text, cx, cy);
+      }
+      const lg = ctx.createLinearGradient(cx - 520, cy - 80, cx + 520, cy + 80);
+      lg.addColorStop(0, "#fffef5");
+      lg.addColorStop(0.2, "#ffcd00");
+      lg.addColorStop(0.45, "#fff6a8");
+      lg.addColorStop(0.55, "#ffe566");
+      lg.addColorStop(0.8, "#ffcd00");
+      lg.addColorStop(1, "#ffd54a");
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = lg;
+      ctx.fillText(text, cx, cy);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.55)";
+      ctx.strokeText(text, cx, cy - 1);
+      ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
+      ctx.fillText(text, cx, cy - 3);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.needsUpdate = true;
+      const sm = new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        depthWrite: false,
+        depthTest: true,
+        opacity: 1,
+      });
+      const sprite = new THREE.Sprite(sm);
+      const FLAG_H = (2.85 * 2) / 3;
+      sprite.position.set(0, FLAG_H * 0.5 + 0.42, 0.18);
+      sprite.scale.set(2.85, 0.68, 1);
+      return sprite;
+    }
+
+    const titleSprite = createVietNamTitleSprite();
+    titleSprite.visible = false;
+    points.add(titleSprite);
+
+    function createILoveVietNamSprite() {
+      const cw = 2048;
+      const ch = 400;
+      const c = document.createElement("canvas");
+      c.width = cw;
+      c.height = ch;
+      const ctx = c.getContext("2d");
+      const cx = cw / 2;
+      const cy = ch / 2;
+      const text = "I LOVE VIET NAM";
+      ctx.font = '800 108px "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      for (let blur = 44; blur >= 6; blur -= 6) {
+        ctx.shadowColor = "rgba(255, 120, 160, 0.55)";
+        ctx.shadowBlur = blur;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.fillStyle = "rgba(255, 180, 200, 0.1)";
+        ctx.fillText(text, cx, cy);
+      }
+      const lg = ctx.createLinearGradient(cx - 700, cy - 70, cx + 700, cy + 70);
+      lg.addColorStop(0, "#fff5f8");
+      lg.addColorStop(0.25, "#ff9ec4");
+      lg.addColorStop(0.5, "#ffffff");
+      lg.addColorStop(0.75, "#ffb8d8");
+      lg.addColorStop(1, "#ff6b9d");
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = lg;
+      ctx.fillText(text, cx, cy);
+      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+      ctx.strokeText(text, cx, cy - 1);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.needsUpdate = true;
+      const sm = new THREE.SpriteMaterial({
+        map: tex,
+        transparent: true,
+        depthWrite: false,
+        depthTest: true,
+        opacity: 1,
+      });
+      const sprite = new THREE.Sprite(sm);
+      sprite.position.set(0, 0.28, 0.16);
+      sprite.scale.set(3.45, 0.66, 1);
+      return sprite;
+    }
+
+    const heartTitleSprite = createILoveVietNamSprite();
+    heartTitleSprite.visible = false;
+    points.add(heartTitleSprite);
+
+    const SUMMARY_COUNT = 5;
+    const RING_R = 2.05;
+    const CARD_Y = 0.04;
+    const SUMMARY_CARD_W = 1.12;
+    const SUMMARY_CARD_H = 0.84;
+
+    const worldYAxis = new THREE.Vector3(0, 1, 0);
+
+    /** Mặt chữ hướng ra ngoài (lật 180° quanh trục dọc sau lookAt). */
+    function orientSummaryCardToCenter(mesh) {
+      mesh.lookAt(0, CARD_Y, 0);
+      mesh.rotateOnWorldAxis(worldYAxis, Math.PI);
+    }
+    function makeSummaryCardTexture(title, subtitle, hue) {
+      const c = document.createElement("canvas");
+      c.width = 512;
+      c.height = 384;
+      const ctx = c.getContext("2d");
+      const g = ctx.createLinearGradient(0, 0, 512, 384);
+      g.addColorStop(0, `hsl(${hue}, 48%, 22%)`);
+      g.addColorStop(1, `hsl(${hue + 18}, 52%, 12%)`);
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 512, 384);
+      ctx.strokeStyle = "rgba(255, 205, 60, 0.45)";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(14, 14, 484, 356);
+      ctx.fillStyle = "#ffcd00";
+      ctx.font = "bold 34px Be Vietnam Pro, system-ui, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(title, 256, 150);
+      ctx.fillStyle = "#e8ecf4";
+      ctx.font = "22px system-ui, sans-serif";
+      const words = subtitle.split(" ");
+      let line = "";
+      let y = 210;
+      for (const w of words) {
+        const test = line + w + " ";
+        if (ctx.measureText(test).width > 420 && line) {
+          ctx.fillText(line, 256, y);
+          y += 30;
+          line = w + " ";
+        } else line = test;
+      }
+      if (line) ctx.fillText(line.trim(), 256, y);
+      const tex = new THREE.CanvasTexture(c);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    const summaryPairs = [
+      ["Đặt vấn đề", "Câu hỏi · ẩn dụ"],
+      ["CSHT · KTTT", "Giáo trình 2021"],
+      ["Lịch sử VN", "Trước & sau 1986"],
+      ["Thực tiễn", "Luật đất · NQ 57"],
+      ["Kết luận", "Biện chứng"],
+    ];
+
+    const summaryRing = new THREE.Group();
+    const summaryMeshes = [];
+    for (let i = 0; i < SUMMARY_COUNT; i++) {
+      const tex = makeSummaryCardTexture(summaryPairs[i][0], summaryPairs[i][1], 200 + i * 32);
+      const mat = new THREE.MeshBasicMaterial({
+        map: tex,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.94,
+      });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(SUMMARY_CARD_W, SUMMARY_CARD_H), mat);
+      const theta = (i / SUMMARY_COUNT) * Math.PI * 2;
+      mesh.position.set(RING_R * Math.cos(theta), CARD_Y, RING_R * Math.sin(theta));
+      orientSummaryCardToCenter(mesh);
+      mesh.userData.restPos = mesh.position.clone();
+      mesh.userData.idx = i;
+      summaryRing.add(mesh);
+      summaryMeshes.push(mesh);
+    }
+    summaryRing.visible = false;
+    summaryRing.position.set(0, 0, 0);
+    scene.add(summaryRing);
+
+    let galleryNearIdx = 0;
+    /** Xoay vòng theo vị trí cổ tay (không tự quay theo thời gian) */
+    let wristRingSmoothX = 0;
+    let wristRingSmoothZ = 0;
+    let wristRingInit = false;
+    let indexXZSmoothX = 0;
+    let indexXZSmoothZ = 0;
+    let fingerAngleSmoothInit = false;
+    let galleryAngStable = 0;
+
+    let gather = 0;
+    /** float | flag | scatter | heart */
+    let mode = "float";
+    let lastAnimMode = "float";
+    let lastSwipe = 0;
+    let heartLost = 0;
+    let flagSmoothFrames = 0;
+    /** 0 = hình cờ, 1 = hình tim — nội suy liên tục, tránh nhảy giữa hai layout */
+    let shapeMorph = 0;
+    const wristHist = [];
+
+    function dist2(a, b) {
+      const dx = a.x - b.x;
+      const dy = a.y - b.y;
+      return Math.hypot(dx, dy);
+    }
+
+    /** Nắm đấm: nhiều đầu ngón gần cổ tay hơn so với lúc duỗi */
+    function isFist(lm) {
+      const wrist = lm[0];
+      const tips = [8, 12, 16, 20];
+      let folded = 0;
+      for (const t of tips) {
+        const pip = lm[t - 2];
+        if (dist2(lm[t], wrist) < dist2(pip, wrist) * 1.08) folded++;
+      }
+      const thumbTip = lm[4];
+      const thumbIp = lm[3];
+      if (dist2(thumbTip, lm[2]) < dist2(thumbIp, lm[2]) * 1.15) folded++;
+      return folded >= 4;
+    }
+
+    function isOpenPalm(lm) {
+      const wrist = lm[0];
+      const tips = [8, 12, 16, 20];
+      let ext = 0;
+      for (const t of tips) {
+        const mcp = lm[t - 3];
+        if (dist2(lm[t], wrist) > dist2(mcp, wrist) * 1.18) ext++;
+      }
+      return ext >= 4;
+    }
+
+    /** Hai tay trong khung (cổ tay không trùng, không quá xa) → tim ngay. */
+    function twoHandsHeartSimple(a, b) {
+      if (!a || !b) return false;
+      const wa = a[0];
+      const wb = b[0];
+      const dw = dist2(wa, wb);
+      const raised = wa.y < 0.62 && wb.y < 0.62;
+      if (raised) return dw > 0.004 && dw < 1.75;
+      return dw > 0.004 && dw < 1.55;
+    }
+
+    function mirrorX(p) {
+      return { x: 1 - p.x, y: p.y, z: p.z };
+    }
+
+    function detectSwipe(wx) {
+      const now = performance.now();
+      wristHist.push({ x: wx, t: now });
+      while (wristHist.length > 12) wristHist.shift();
+      if (wristHist.length < 6) return false;
+      const a = wristHist[0];
+      const b = wristHist[wristHist.length - 1];
+      const dt = (b.t - a.t) / 1000;
+      if (dt < 0.05) return false;
+      const vx = (b.x - a.x) / dt;
+      if (Math.abs(vx) > 1.65 && now - lastSwipe > 550) {
+        lastSwipe = now;
+        return Math.sign(vx);
+      }
+      return 0;
+    }
+
+    let handLandmarker = null;
+    let lastVideoTime = -1;
+
+    async function initMP() {
+      const fs = await FilesetResolver.forVisionTasks(WASM);
+      try {
+        handLandmarker = await HandLandmarker.createFromOptions(fs, {
+          baseOptions: { modelAssetPath: MODEL, delegate: "GPU" },
+          runningMode: "VIDEO",
+          numHands: 2,
+          minHandDetectionConfidence: 0.35,
+          minHandPresenceConfidence: 0.35,
+        });
+      } catch {
+        handLandmarker = await HandLandmarker.createFromOptions(fs, {
+          baseOptions: { modelAssetPath: MODEL, delegate: "CPU" },
+          runningMode: "VIDEO",
+          numHands: 2,
+          minHandDetectionConfidence: 0.35,
+          minHandPresenceConfidence: 0.35,
+        });
+      }
+    }
+
+    function resize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    window.addEventListener("resize", resize);
+    resize();
+
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      statusEl.textContent = "Đang xin quyền camera…";
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: false,
+        });
+        video.srcObject = stream;
+        await video.play();
+        await initMP();
+        statusEl.textContent = "Đã sẵn sàng — đưa tay vào khung hình.";
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = "Không mở được camera (cần HTTPS hoặc localhost).";
+        btn.disabled = false;
+      }
+    });
+
+    const tmp = new THREE.Vector3();
+    const hand3 = new THREE.Vector3();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = performance.now() * 0.001;
+
+      let lm = null;
+      let lm1 = null;
+      if (handLandmarker && video.readyState >= 2) {
+        if (video.currentTime !== lastVideoTime) {
+          lastVideoTime = video.currentTime;
+          const res = handLandmarker.detectForVideo(video, performance.now());
+          const raw = res.landmarks;
+          if (raw?.[0]) {
+            let h0 = raw[0].map(mirrorX);
+            let h1 = raw[1] ? raw[1].map(mirrorX) : null;
+            if (h1 && h0[0].x > h1[0].x) {
+              const t = h0;
+              h0 = h1;
+              h1 = t;
+            }
+            lm = h0;
+            lm1 = h1;
+          }
+        }
+      }
+
+      let label = "Không thấy tay";
+      let wx = 0.5;
+
+      const twoH = !!(lm && lm1 && twoHandsHeartSimple(lm, lm1));
+      if (twoH) {
+        mode = "heart";
+        gather = 0;
+        heartLost = 0;
+        label = "🫶 Hai tay → tim";
+      } else {
+        if (mode === "heart") {
+          heartLost++;
+          if (heartLost > 36) {
+            mode = "float";
+            heartLost = 0;
+          }
+        } else heartLost = 0;
+      }
+
+      if (lm) {
+        wx = lm[0].x;
+        const blockFistForHeart = mode !== "heart" && lm1 && twoHandsHeartSimple(lm, lm1);
+        const fist = mode !== "heart" && !blockFistForHeart && isFist(lm);
+        const open =
+          mode !== "heart" &&
+          isOpenPalm(lm) &&
+          !isFist(lm) &&
+          !(lm1 && twoHandsHeartSimple(lm, lm1));
+        const swipe = mode !== "heart" ? detectSwipe(wx) : 0;
+
+        if (fist) {
+          gather = Math.min(12, gather + 1);
+          if (gather >= 8) {
+            mode = "flag";
+            tgt.set(flagTgt);
+            label = "Nắm đấm → tụ cờ";
+          } else label = "Giữ nắm đấm…";
+        } else {
+          gather = Math.max(0, gather - 1);
+        }
+
+        if (open) {
+          mode = "scatter";
+          for (let i = 0; i < N * 3; i++) tgt[i] = pos[i];
+          label = "Mở tay → tản hạt + vòng 5 ảnh tổng kết";
+        }
+
+        if (swipe !== 0) {
+          for (let i = 0; i < N; i++) {
+            const i3 = i * 3;
+            vel[i3] += swipe * (0.04 + Math.random() * 0.07);
+            vel[i3 + 1] += (Math.random() - 0.5) * 0.06;
+            vel[i3 + 2] += (Math.random() - 0.5) * 0.05;
+          }
+          label = "Hất tay → xung lực";
+        }
+
+        if (lm && lm1 && (mode === "heart" || shapeMorph > 0.12)) {
+          const ax = (lm[0].x + lm1[0].x) * 0.5;
+          const ay = (lm[0].y + lm1[0].y) * 0.5;
+          hand3.set((ax - 0.5) * 5.5, -(ay - 0.5) * 4.2, 0.2);
+        } else {
+          hand3.set((lm[0].x - 0.5) * 5.5, -(lm[0].y - 0.5) * 4.2, 0.2);
+        }
+      } else {
+        label = video.srcObject ? "Đưa tay vào khung hình" : "Chưa bật camera";
+      }
+
+      const formedNow = mode === "flag" || mode === "heart";
+      if (formedNow && twoH) shapeMorph = 1;
+      else {
+        shapeMorph += (0 - shapeMorph) * 0.16;
+        if (shapeMorph < 0.02) shapeMorph = 0;
+      }
+
+      const wasFormed = lastAnimMode === "flag" || lastAnimMode === "heart";
+      const isFormed = mode === "flag" || mode === "heart";
+      const snapA = 0.48;
+      if (isFormed && !wasFormed) {
+        const b = shapeMorph;
+        for (let i = 0; i < N; i++) {
+          const i3 = i * 3;
+          const bx = flagTgt[i3] * (1 - b) + heartTgt[i3] * b;
+          const by = flagTgt[i3 + 1] * (1 - b) + heartTgt[i3 + 1] * b;
+          const bz = flagTgt[i3 + 2] * (1 - b) + heartTgt[i3 + 2] * b;
+          pos[i3] = pos[i3] * (1 - snapA) + bx * snapA;
+          pos[i3 + 1] = pos[i3 + 1] * (1 - snapA) + by * snapA;
+          pos[i3 + 2] = pos[i3 + 2] * (1 - snapA) + bz * snapA;
+        }
+        for (let i = 0; i < N * 3; i++) vel[i] *= 0.012;
+        flagSmoothFrames = 0;
+      }
+
+      const fh = shapeMorph;
+      const flagPullPart = 0.054 + 0.048 * Math.exp(-flagSmoothFrames * 0.2);
+      const pull =
+        mode === "flag" || mode === "heart"
+          ? flagPullPart * (1 - fh) + 0.062 * fh
+          : mode === "scatter"
+            ? 0.012
+            : 0.028;
+      const damp = mode === "flag" || mode === "heart" ? 0.954 : 0.94;
+
+      for (let i = 0; i < N; i++) {
+        const i3 = i * 3;
+        let tx;
+        let ty;
+        let tz;
+        if (mode === "flag" || mode === "heart") {
+          tx = flagTgt[i3] * (1 - fh) + heartTgt[i3] * fh;
+          ty = flagTgt[i3 + 1] * (1 - fh) + heartTgt[i3 + 1] * fh;
+          tz = flagTgt[i3 + 2] * (1 - fh) + heartTgt[i3 + 2] * fh;
+        } else if (mode === "scatter") {
+          const ph = rnd[i3] * 4.5;
+          const ph2 = rnd[i3 + 1] * 3.8;
+          const ph3 = rnd[i3 + 2] * 3.2;
+          tx =
+            Math.sin(t * 0.6 + ph) * 3.25 +
+            Math.sin(t * 1.75 + i * 0.014) * 0.62 +
+            rnd[i3] * 0.68;
+          ty =
+            Math.cos(t * 0.46 + ph2) * 2.75 +
+            Math.cos(t * 1.35 + i * 0.011) * 0.52 +
+            rnd[i3 + 1] * 0.58;
+          tz =
+            Math.sin(t * 0.82 + ph3) * 1.65 +
+            Math.sin(t * 2.05 + rnd[i3] * 2.2) * 0.48;
+        } else {
+          tx = pos[i3] + Math.sin(t + i * 0.01) * 0.22;
+          ty = pos[i3 + 1] + Math.cos(t * 0.8 + i * 0.01) * 0.18;
+          tz = pos[i3 + 2] + Math.sin(t * 1.1 + i * 0.008) * 0.12;
+        }
+
+        if (mode === "scatter" && lm) {
+          tmp.set(pos[i3], pos[i3 + 1], pos[i3 + 2]).sub(hand3);
+          const d = tmp.length() + 0.15;
+          const rep = 0.018 / (d * d);
+          vel[i3] += tmp.x * rep;
+          vel[i3 + 1] += tmp.y * rep;
+          vel[i3 + 2] += tmp.z * rep * 0.4;
+        }
+
+        vel[i3] += (tx - pos[i3]) * pull;
+        vel[i3 + 1] += (ty - pos[i3 + 1]) * pull;
+        vel[i3 + 2] += (tz - pos[i3 + 2]) * pull;
+        vel[i3] *= damp;
+        vel[i3 + 1] *= damp;
+        vel[i3 + 2] *= damp;
+        pos[i3] += vel[i3];
+        pos[i3 + 1] += vel[i3 + 1];
+        pos[i3 + 2] += vel[i3 + 2];
+
+        let cR;
+        let cG;
+        let cB;
+        if (mode === "scatter" || mode === "float") {
+          cR = baseCol[i3];
+          cG = baseCol[i3 + 1];
+          cB = baseCol[i3 + 2];
+        } else {
+          cR = baseCol[i3] * (1 - fh) + heartBaseCol[i3] * fh;
+          cG = baseCol[i3 + 1] * (1 - fh) + heartBaseCol[i3 + 1] * fh;
+          cB = baseCol[i3 + 2] * (1 - fh) + heartBaseCol[i3 + 2] * fh;
+        }
+        if (mode === "scatter") {
+          const tw = 0.94 + 0.12 * Math.sin(t * 2.55 + i * 0.042 + rnd[i3] * 1.8);
+          col[i3] = Math.min(1, cR * tw);
+          col[i3 + 1] = Math.min(1, cG * tw);
+          col[i3 + 2] = Math.min(1, cB * tw);
+        } else if (mode === "flag" || mode === "heart") {
+          const gl =
+            (1.1 + 0.09 * Math.sin(t * 2.2 + i * 0.009)) * (1 - fh) +
+            (1.08 + 0.1 * Math.sin(t * 2.45 + i * 0.011)) * fh;
+          col[i3] = Math.min(1, cR * gl);
+          col[i3 + 1] = Math.min(1, cG * gl);
+          col[i3 + 2] = Math.min(1, cB * gl);
+        } else {
+          const f = 1.1;
+          col[i3] = Math.min(1, cR * f);
+          col[i3 + 1] = Math.min(1, cG * f);
+          col[i3 + 2] = Math.min(1, cB * f);
+        }
+      }
+
+      geom.attributes.position.needsUpdate = true;
+      geom.attributes.color.needsUpdate = true;
+
+      const wantPtSize =
+        mode === "flag" || mode === "heart"
+          ? 0.108 * (1 - fh) + 0.122 * fh
+          : mode === "scatter"
+            ? 0.078
+            : 0.07;
+      mat.size = THREE.MathUtils.lerp(mat.size, wantPtSize, 0.07);
+
+      if (mode === "flag" || mode === "heart") {
+        points.rotation.x = 0;
+        points.rotation.y = 0;
+      } else {
+        points.rotation.y = Math.sin(t * 0.15) * 0.08;
+        points.rotation.x = Math.cos(t * 0.12) * 0.05;
+      }
+
+      summaryRing.visible = mode === "scatter";
+      if (mode === "scatter") {
+        if (lm) {
+          const wxT = (lm[0].x - 0.5) * 2.65;
+          const wzT = -(lm[0].y - 0.5) * 2.05;
+          const vertExt = Math.abs(lm[0].y - 0.5);
+          const wLerp = vertExt > 0.14 ? 0.07 : 0.14;
+          if (!wristRingInit) {
+            wristRingSmoothX = wxT;
+            wristRingSmoothZ = wzT;
+            wristRingInit = true;
+            const m0 = Math.hypot(wxT, wzT);
+            if (m0 > 0.04) summaryRing.rotation.y = Math.atan2(wxT, wzT);
+          } else {
+            wristRingSmoothX += (wxT - wristRingSmoothX) * wLerp;
+            wristRingSmoothZ += (wzT - wristRingSmoothZ) * wLerp;
+          }
+          const mag = Math.hypot(wristRingSmoothX, wristRingSmoothZ);
+          if (mag > 0.038) {
+            const targetYaw = Math.atan2(wristRingSmoothX, wristRingSmoothZ);
+            const cur = summaryRing.rotation.y;
+            let dYaw = targetYaw - cur;
+            while (dYaw > Math.PI) dYaw -= Math.PI * 2;
+            while (dYaw < -Math.PI) dYaw += Math.PI * 2;
+            summaryRing.rotation.y += dYaw * 0.36;
+          }
+        }
+
+        let best = 0;
+        let bestDiff = 10;
+        if (lm) {
+          const ixT = (lm[8].x - 0.5) * 5.2;
+          const izT = -(lm[8].y - 0.5) * 4.0;
+          const vertExtF = Math.abs(lm[0].y - 0.5) + Math.abs(lm[8].y - 0.5) * 0.35;
+          const lerpFinger = vertExtF > 0.22 ? 0.055 : vertExtF > 0.14 ? 0.09 : 0.16;
+          if (!fingerAngleSmoothInit) {
+            indexXZSmoothX = ixT;
+            indexXZSmoothZ = izT;
+            fingerAngleSmoothInit = true;
+            const hi = Math.hypot(ixT, izT);
+            galleryAngStable = hi > 0.045 ? Math.atan2(ixT, izT) : summaryRing.rotation.y;
+          } else {
+            indexXZSmoothX += (ixT - indexXZSmoothX) * lerpFinger;
+            indexXZSmoothZ += (izT - indexXZSmoothZ) * lerpFinger;
+          }
+          const iMag = Math.hypot(indexXZSmoothX, indexXZSmoothZ);
+          if (iMag > 0.048) {
+            const raw = Math.atan2(indexXZSmoothX, indexXZSmoothZ);
+            let da = raw - galleryAngStable;
+            while (da > Math.PI) da -= Math.PI * 2;
+            while (da < -Math.PI) da += Math.PI * 2;
+            galleryAngStable += da * 0.42;
+          }
+          const angF = galleryAngStable;
+          for (let i = 0; i < SUMMARY_COUNT; i++) {
+            const th = (i / SUMMARY_COUNT) * Math.PI * 2 + summaryRing.rotation.y;
+            let d = angF - th;
+            while (d > Math.PI) d -= Math.PI * 2;
+            while (d < -Math.PI) d += Math.PI * 2;
+            const ad = Math.abs(d);
+            if (ad < bestDiff) {
+              bestDiff = ad;
+              best = i;
+            }
+          }
+          galleryNearIdx = best;
+        } else {
+          fingerAngleSmoothInit = false;
+        }
+
+        for (let i = 0; i < SUMMARY_COUNT; i++) {
+          const m = summaryMeshes[i];
+          const mat = m.material;
+
+          if (lm && i === galleryNearIdx) {
+            mat.opacity = 1;
+            const s = 1.08 + Math.sin(t * 3.2) * 0.028;
+            m.scale.set(s, s, 1);
+          } else {
+            m.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+            mat.opacity = THREE.MathUtils.lerp(mat.opacity, 0.94, 0.1);
+          }
+        }
+      } else {
+        wristRingInit = false;
+        wristRingSmoothX *= 0.85;
+        wristRingSmoothZ *= 0.85;
+        fingerAngleSmoothInit = false;
+        for (const m of summaryMeshes) {
+          m.quaternion.identity();
+          orientSummaryCardToCenter(m);
+          m.scale.set(1, 1, 1);
+          m.material.opacity = 0.94;
+        }
+      }
+
+      const showVnTitle = mode === "flag";
+      const showHeartTitle = mode === "heart";
+      titleSprite.visible = showVnTitle;
+      titleSprite.material.opacity = showVnTitle ? 1 : 0;
+      heartTitleSprite.visible = showHeartTitle;
+      heartTitleSprite.material.opacity = showHeartTitle ? 1 : 0;
+      if (showVnTitle) {
+        const pulse = 1 + Math.sin(t * 2.8) * 0.035;
+        titleSprite.scale.set(2.85 * pulse, 0.68 * pulse, 1);
+      } else {
+        titleSprite.scale.set(2.85, 0.68, 1);
+      }
+      if (showHeartTitle) {
+        const pulse = 1 + Math.sin(t * 2.6) * 0.04;
+        heartTitleSprite.scale.set(3.45 * pulse, 0.66 * pulse, 1);
+      } else {
+        heartTitleSprite.scale.set(3.45, 0.66, 1);
+      }
+
+      renderer.render(scene, camera);
+      if (video.srcObject) {
+        let s = `${label} · ${mode}`;
+        if (mode === "scatter") s += " · ✋ xoay tay để xoay vòng";
+        else if (mode === "heart") s += " · 🫶 che bớt một tay / tách tay → thoát tim";
+        statusEl.textContent = s;
+      }
+
+      if (mode === "flag" || mode === "heart") {
+        if (fh < 0.88) flagSmoothFrames++;
+        else flagSmoothFrames = Math.min(flagSmoothFrames + 1, 80);
+      } else flagSmoothFrames = 0;
+
+      lastAnimMode = mode;
+    }
+
+    animate();
+  </script>
+</body>
+</html>

@@ -184,6 +184,54 @@
       box-shadow: 0 0 30px rgba(207, 181, 59, 0.4);
     }
 
+    /* Nút tròn → demo cờ Three.js + tay */
+    .fab-flag-demo {
+      position: fixed;
+      left: 1.25rem;
+      bottom: 1.25rem;
+      z-index: 1002;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 1.35rem;
+      line-height: 1;
+      background: linear-gradient(145deg, var(--accent), #6f1010);
+      color: var(--accent-gold);
+      border: 2px solid rgba(207, 181, 59, 0.5);
+      box-shadow:
+        0 6px 24px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), border-color 0.25s var(--ease);
+    }
+
+    .fab-flag-demo:hover {
+      transform: scale(1.07);
+      border-color: var(--accent-gold);
+      box-shadow:
+        0 10px 36px rgba(189, 30, 30, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .fab-flag-demo:active {
+      transform: scale(0.98);
+    }
+
+    .fab-flag-demo span {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
     /* —— TOC Slide —— */
     .slide--toc {
       padding: 4rem;
@@ -1259,6 +1307,11 @@
   <div class="progress-bar">
     <div class="progress-fill" id="progress-fill"></div>
   </div>
+
+  <a class="fab-flag-demo" href="flag-hands.html" target="_blank" rel="noopener" title="Demo cờ Việt Nam — Three.js &amp; bàn tay">
+    ★
+    <span>Mở demo cờ Việt Nam điều khiển bằng tay (Three.js)</span>
+  </a>
 
   <div class="slide-nav" id="slide-nav">
     <!-- Will be populated by JS -->
