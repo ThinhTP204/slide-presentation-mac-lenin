@@ -6,20 +6,30 @@
   <title>Nhóm 4 — CSHT & Kiến trúc thượng tầng</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=Big+Shoulders+Display:wght@700;900&display=swap" rel="stylesheet" />
+  
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
   <style>
     :root {
-      --bg: #0a0e1a;
-      --bg2: #12182a;
-      --text: #e8ecf4;
-      --muted: #8b95ae;
-      --accent: #e8c547;
-      --accent2: #3dd6c7;
-      --danger: #ff6b6b;
-      --slide-ease: cubic-bezier(0.22, 1, 0.36, 1);
-      --scroll-ease: cubic-bezier(0.33, 1, 0.36, 1);
-      --dur: 0.85s;
-      --scroll-dur: 0.82s;
+      --bg: #050505;
+      --bg-alt: #0a0a0a;
+      --text: #f0f0f0;
+      --muted: #a0a0a0;
+      --accent: #bd1e1e; /* Academic Crimson */
+      --accent-gold: #cfb53b; /* Metallic Gold */
+      --glass: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      
+      --font-serif: "Instrument Serif", serif;
+      --font-sans: "Inter", system-ui, sans-serif;
+      --font-display: "Big Shoulders Display", sans-serif;
+      --font-vn: "Be Vietnam Pro", "Inter", system-ui, sans-serif;
+      
+      --ease: cubic-bezier(0.23, 1, 0.32, 1);
+      --dur: 0.8s;
     }
 
     @keyframes scroll-out-up {
@@ -64,42 +74,43 @@
       padding: 0;
     }
 
-    html, body {
-      height: 100%;
-      overflow: hidden;
+    html {
+      scroll-behavior: initial;
+    }
+
+    body {
       background: var(--bg);
       color: var(--text);
-      font-family: "Be Vietnam Pro", system-ui, sans-serif;
+      font-family: var(--font-sans);
       -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+      line-height: 1.6;
     }
 
-    /* Ambient */
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(232, 197, 71, 0.12), transparent),
-        radial-gradient(ellipse 60% 40% at 100% 100%, rgba(61, 214, 199, 0.08), transparent);
-      pointer-events: none;
-      z-index: 0;
-    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
 
     .deck {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      overflow: hidden;
-      perspective: 1400px;
+      width: 100%;
     }
 
-    /* —— Slide bìa: chỉ background + tiêu đề + nút —— */
-    .slide--cover {
+    section {
+      height: 100vh;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
       display: flex;
-      align-items: center;
+      flex-direction: column;
+    }
+
+    /* —— Slide bìa —— */
+    .slide--cover {
       justify-content: center;
-      padding: clamp(1.5rem, 4vw, 3rem);
+      align-items: center;
       text-align: center;
+      background: var(--bg);
     }
 
     .slide-cover-bg {
@@ -107,102 +118,336 @@
       inset: 0;
       background-size: cover;
       background-position: center;
-      transform: scale(1.04);
-      transition: transform 12s ease-out;
-    }
-
-    .slide--cover.active .slide-cover-bg {
-      transform: scale(1);
+      opacity: 0.4;
+      filter: grayscale(0.5) contrast(1.2);
     }
 
     .slide-cover-vignette {
       position: absolute;
       inset: 0;
-      background:
-        linear-gradient(180deg, rgba(6, 10, 22, 0.55) 0%, rgba(10, 14, 26, 0.72) 45%, rgba(6, 10, 22, 0.88) 100%),
-        radial-gradient(ellipse 90% 70% at 50% 20%, rgba(232, 197, 71, 0.08), transparent 55%);
-      pointer-events: none;
+      background: radial-gradient(circle at center, transparent 0%, var(--bg) 90%);
       z-index: 1;
     }
 
     .slide-cover-inner {
       position: relative;
       z-index: 2;
-      max-width: min(960px, 94vw);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: clamp(1.25rem, 3vw, 2rem);
+      max-width: 1200px;
     }
 
-    .slide-cover-inner .cover-kicker {
-      font-size: clamp(0.85rem, 1.25vw, 1rem);
-      letter-spacing: 0.28em;
+    .cover-kicker {
+      font-family: var(--font-display);
       text-transform: uppercase;
-      color: var(--accent2);
-      font-weight: 700;
-      opacity: 0.95;
+      letter-spacing: 0.5em;
+      color: var(--accent);
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+      display: block;
     }
 
-    .slide-cover-inner h1 {
-      font-size: clamp(2.4rem, 7vw, 4.8rem);
-      line-height: 1.08;
-      text-shadow: 0 8px 40px rgba(0, 0, 0, 0.55);
+    h1.hero-title {
+      font-family: var(--font-serif);
+      font-size: clamp(3rem, 10vw, 8rem);
+      line-height: 0.9;
+      margin-bottom: 2rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      word-spacing: 0;
+      font-kerning: normal;
     }
 
-    .slide-cover-inner .cover-sub {
-      font-size: clamp(1.1rem, 2.1vw, 1.45rem);
-      color: rgba(220, 228, 244, 0.88);
-      line-height: 1.55;
-      max-width: 42ch;
+    .cover-sub {
+      font-size: 1.25rem;
+      color: var(--muted);
+      max-width: 60ch;
+      margin: 0 auto 3rem;
     }
 
     .btn-start {
-      appearance: none;
-      border: none;
-      cursor: pointer;
-      margin-top: 0.5rem;
-      padding: 1.05rem 2.75rem;
-      font-family: inherit;
-      font-size: clamp(1.05rem, 1.6vw, 1.2rem);
-      font-weight: 700;
-      letter-spacing: 0.12em;
+      background: none;
+      border: 1px solid var(--accent-gold);
+      color: var(--accent-gold);
+      padding: 1rem 3rem;
+      font-family: var(--font-display);
       text-transform: uppercase;
-      color: #0a0e1a;
-      background: linear-gradient(135deg, var(--accent) 0%, #f0dc7a 50%, var(--accent2) 100%);
-      background-size: 200% 200%;
-      border-radius: 999px;
-      box-shadow:
-        0 4px 24px rgba(232, 197, 71, 0.45),
-        0 0 0 1px rgba(255, 255, 255, 0.12) inset;
-      transition: transform 0.35s var(--slide-ease), box-shadow 0.35s;
+      letter-spacing: 0.2em;
+      font-size: 1rem;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s var(--ease);
     }
 
     .btn-start:hover {
-      transform: translateY(-3px) scale(1.02);
-      box-shadow: 0 12px 40px rgba(61, 214, 199, 0.35);
+      background: var(--accent-gold);
+      color: var(--bg);
+      box-shadow: 0 0 30px rgba(207, 181, 59, 0.4);
     }
 
-    .btn-start:active {
-      transform: translateY(0) scale(0.98);
+    /* —— TOC Slide —— */
+    .slide--toc {
+      padding: 4rem;
+      background: var(--bg-alt);
     }
 
-    .slide--cover.cover--exiting {
+    .toc-shell {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .toc-title {
+      font-family: var(--font-serif);
+      font-size: 4rem;
+      margin-bottom: 3rem;
+    }
+
+    .toc-title span {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 1.2rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      flex: 1;
+    }
+
+    .toc-card {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s var(--ease);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .toc-card:hover {
+      border-color: var(--accent);
+      background: rgba(189, 30, 30, 0.05);
+      transform: translateY(-5px);
+    }
+
+    .toc-card strong {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      color: var(--accent-gold);
+    }
+
+    .toc-card span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* —— Content Slides —— */
+    .slide--content {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 4rem;
+      padding: 6rem;
+      align-items: center;
+    }
+
+    .slide-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .milestone {
+      font-family: var(--font-display);
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-size: 1rem;
+    }
+
+    h2 {
+      font-family: var(--font-vn);
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      line-height: 1.1;
+      font-weight: 600;
+      letter-spacing: 0;
+      word-spacing: 0;
+      font-kerning: normal;
+    }
+
+    .lead {
+      font-size: 1.25rem;
+      color: var(--muted);
+      max-width: 50ch;
+    }
+
+    .points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .points li {
+      padding-left: 2rem;
+      position: relative;
+      font-size: 1.1rem;
+    }
+
+    .points li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.6em;
+      width: 10px;
+      height: 1px;
+      background: var(--accent-gold);
+    }
+
+    .slide-aside {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .slide-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: var(--bg-alt);
+      border: 1px solid var(--glass-border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(0.2) contrast(1.1);
+      transition: transform 0.8s var(--ease);
+    }
+
+    .slide-thumb:hover img {
+      transform: scale(1.05);
+    }
+
+    .link-strip {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--bg-alt);
+      padding: 0.75rem;
+      border: 1px solid var(--glass-border);
+      font-family: var(--font-display);
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+
+    /* UI Chrome */
+    .progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.1);
+      z-index: 1000;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+    }
+
+    .slide-nav {
+      position: fixed;
+      left: 3rem;
+      bottom: 3rem;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .nav-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      cursor: pointer;
+      transition: all 0.3s var(--ease);
+    }
+
+    .nav-dot.active {
+      background: var(--accent);
+      transform: scale(1.5);
+    }
+
+    .slide-counter {
+      position: fixed;
+      right: 3rem;
+      bottom: 2rem;
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      z-index: 1001;
       pointer-events: none;
-      animation: coverExit 1.15s var(--slide-ease) forwards;
+    }
+    .slide-counter span {
+      color: var(--accent);
     }
 
-    @keyframes coverExit {
-      0% {
-        transform: translateY(0) scale(1) rotateX(0deg);
-        opacity: 1;
-        filter: blur(0);
+    .controls {
+      position: fixed;
+      right: 1.5rem;
+      top: 1.5rem;
+      bottom: auto;
+      display: flex;
+      gap: 0.75rem;
+      z-index: 1001;
+    }
+
+    .controls button {
+      background: var(--glass);
+      border: 1px solid var(--glass-border);
+      color: var(--text);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all 0.3s var(--ease);
+    }
+
+    .controls button:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    /* Custom Animations for GSAP */
+    .gsap-reveal {
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(30px);
+    }
+    
+    .gsap-line { overflow: hidden; }
+
+    @media (max-width: 1024px) {
+      .slide--content {
+        grid-template-columns: 1fr;
+        padding: 3rem 1.5rem;
+        gap: 2rem;
       }
-      100% {
-        transform: translateY(-18vh) scale(0.92) rotateX(8deg);
-        opacity: 0;
-        filter: blur(12px);
-      }
+      .slide-aside { order: -1; }
+      h2 { font-size: 2rem; }
     }
 
     /* —— Phụ lục dạng cây —— */
@@ -266,13 +511,13 @@
       border-radius: 12px;
       background: rgba(18, 24, 42, 0.45);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      opacity: 0;
-      transform: translateX(-28px) translateY(12px);
-      filter: blur(4px);
+      opacity: 1;
+      transform: none;
+      filter: none;
     }
 
     .slide--toc.active .toc-node {
-      animation: tocNodeIn 0.75s var(--slide-ease) forwards;
+      animation: none;
     }
 
     .slide--toc.active .toc-node:nth-child(1) { animation-delay: 0.05s; }
@@ -319,6 +564,12 @@
       font-size: clamp(1.05rem, 1.5vw, 1.25rem);
     }
 
+    .slide--toc .gsap-reveal {
+      opacity: 1;
+      visibility: visible;
+      transform: none;
+    }
+
     .slide--toc.toc--entering {
       transform: translateY(110vh) scale(0.96);
       opacity: 0;
@@ -345,11 +596,37 @@
 
     /* —— Slide nội dung: mốc + lưới rõ ràng —— */
     .slide--content {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto minmax(0, 1fr);
-      align-content: stretch;
-      gap: clamp(0.65rem, 1.5vw, 1rem);
-      padding: clamp(0.75rem, 1.8vw, 1.35rem) clamp(1rem, 2.2vw, 2.25rem) clamp(1rem, 2vw, 1.5rem);
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr);
+      align-content: center;
+      align-items: center;
+      justify-items: center;
+      gap: clamp(1.25rem, 3vw, 3rem);
+      padding: clamp(2.5rem, 7vw, 5.5rem) clamp(1.75rem, 7vw, 6rem);
+    }
+
+    .slide--content.no-media {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .slide--content.no-media .slide-aside {
+      display: none;
+    }
+
+    .slide--content.no-media .slide-main {
+      max-width: 980px;
+    }
+
+    .slide--content .slide-main {
+      max-width: 1100px;
+      width: min(100%, 1100px);
+    }
+
+    .slide--content h2 {
+      font-size: clamp(2.15rem, 4.8vw, 3.4rem);
+      letter-spacing: 0;
+      font-family: var(--font-vn);
+      font-weight: 600;
     }
 
     .slide-chapter {
@@ -490,11 +767,12 @@
       border: 1px solid rgba(255, 255, 255, 0.09);
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.38);
       background: rgba(10, 14, 26, 0.55);
+      aspect-ratio: 4 / 3;
     }
 
     .slide-thumb img {
       width: 100%;
-      height: clamp(118px, 16vh, 188px);
+      height: 100%;
       object-fit: cover;
       object-position: center;
       display: block;
@@ -527,21 +805,20 @@
       align-items: stretch;
     }
 
-    .slide-thumb-row .slide-thumb img {
-      height: clamp(100px, 13vh, 152px);
+    .slide-thumb-row .slide-thumb {
+      aspect-ratio: 3 / 2;
     }
 
     /* Slide: chuyển cảnh kiểu cuộn dọc (standardGoTo) */
     .slide {
-      position: absolute;
-      inset: 0;
+      position: relative;
       display: grid;
       grid-template-columns: minmax(0, 1.88fr) minmax(280px, 1fr);
       gap: clamp(1rem, 2.8vw, 2.25rem);
       align-items: stretch;
       padding: clamp(0.85rem, 2vw, 1.75rem) clamp(1rem, 2.5vw, 2.5rem);
-      opacity: 0;
-      visibility: hidden;
+      opacity: 1;
+      visibility: visible;
       transform: translate3d(0, 0, 0);
       transition: opacity 0.35s ease;
       z-index: 1;
@@ -680,14 +957,19 @@
       font-weight: 400;
       line-height: 1.12;
       letter-spacing: -0.02em;
+      word-spacing: 0;
+      font-kerning: normal;
     }
 
     h2 {
-      font-family: "Instrument Serif", Georgia, serif;
+      font-family: var(--font-vn);
       font-size: clamp(1.85rem, 3.6vw, 2.85rem);
-      font-weight: 400;
+      font-weight: 600;
       line-height: 1.18;
       color: #fff;
+      letter-spacing: 0;
+      word-spacing: 0;
+      font-kerning: normal;
     }
 
     .lead {
@@ -703,18 +985,22 @@
 
     ul.points {
       list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.65rem;
-      margin-top: 0.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: clamp(0.75rem, 1.2vw, 1.1rem);
+      margin-top: 1rem;
     }
 
     ul.points li {
       position: relative;
-      padding-left: 1.35rem;
-      font-size: clamp(1.02rem, 1.55vw, 1.22rem);
-      line-height: 1.58;
-      color: #c5cce0;
+      padding: 1rem 1.1rem;
+      font-size: clamp(1rem, 1.45vw, 1.18rem);
+      line-height: 1.55;
+      color: #d7def2;
+      background: rgba(18, 24, 42, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      box-shadow: 0 16px 36px rgba(4, 8, 20, 0.4);
       opacity: 0;
       transform: translateX(-16px);
     }
@@ -729,16 +1015,32 @@
     .slide.active ul.points li:nth-child(4) { animation-delay: 0.56s; }
     .slide.active ul.points li:nth-child(5) { animation-delay: 0.68s; }
 
-    ul.points li::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0.55em;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
-      box-shadow: 0 0 12px rgba(232, 197, 71, 0.5);
+    ul.points li::before { content: none; }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: clamp(0.85rem, 1.6vw, 1.35rem);
+      margin-top: 1.1rem;
+    }
+
+    .info-card {
+      padding: 1rem 1.1rem;
+      border-radius: 14px;
+      background: rgba(18, 24, 42, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 16px 36px rgba(4, 8, 20, 0.4);
+    }
+
+    .info-card h4 {
+      margin-bottom: 0.5rem;
+      font-size: 1.05rem;
+      letter-spacing: 0.02em;
+    }
+
+    .info-card p {
+      font-size: 0.98rem;
+      color: var(--muted);
     }
 
     .tag {
@@ -850,8 +1152,9 @@
 
     .controls {
       position: fixed;
-      bottom: 1.25rem;
+      top: 1.25rem;
       right: 1.25rem;
+      bottom: auto;
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -953,355 +1256,175 @@
   </style>
 </head>
 <body>
-  <div class="progress" id="progress"></div>
-  <div class="counter counter--hidden" id="counter"><strong>00</strong> / 10</div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+
+  <div class="slide-nav" id="slide-nav">
+    <!-- Will be populated by JS -->
+  </div>
+
+  <div class="slide-counter" id="slide-counter">
+    <span id="current-slide">01</span> / <span id="total-slides">10</span>
+  </div>
 
   <div class="deck" id="deck">
-    <!-- 0 · Bìa toàn màn hình -->
-    <section class="slide slide--cover active" data-i="0" id="slide-cover">
-      <div class="slide-cover-bg" style="background-image: url('assets/philo-01-base-superstructure.png');" role="img" aria-label="Nền minh họa hạ tầng và thượng tầng"></div>
-      <div class="slide-cover-vignette" aria-hidden="true"></div>
+    <!-- 0 · Hero Section -->
+    <section class="slide slide--cover" data-i="0">
+      <div class="slide-cover-bg" style="background-image: url('assets/philo-01-base-superstructure.png');"></div>
+      <div class="slide-cover-vignette"></div>
       <div class="slide-cover-inner">
-        <p class="cover-kicker">Nhóm 4 · Triết học Mác — Lênin</p>
-        <h1>Biện chứng <em style="color: var(--accent2);">Cơ sở hạ tầng</em><br />&amp; <em style="color: var(--accent);">Kiến trúc thượng tầng</em></h1>
-        <p class="cover-sub">Chủ đề #03 — Câu hỏi lớn: “Con cái phải nghe bố mẹ — vậy ai nắm quyền kinh tế thì quyết định chính trị, tư tưởng?” Một luồng lý luận, không tách rời khái niệm — thực tiễn — kết luận.</p>
-        <button type="button" class="btn-start" id="btn-start">Bắt đầu</button>
+        <span class="cover-kicker gsap-reveal">Nhóm 4 · Triết học Mác — Lênin</span>
+        <h1 class="hero-title gsap-reveal">Biện chứng<br/><span style="color: var(--accent);">Cơ sở hạ tầng</span><br/>& <span style="color: var(--accent-gold);">Kiến trúc thượng tầng</span></h1>
+        <p class="cover-sub gsap-reveal">Chủ đề #03 — Một luồng lý luận đồng nhất giữa khái niệm, thực tiễn và kết luận khoa học.</p>
+        <div class="gsap-reveal">
+          <button type="button" class="btn-start">Bắt đầu khám phá</button>
+        </div>
       </div>
     </section>
 
-    <!-- 1 · Phụ lục — bốn luồng xuyên suốt (mỗi luồng gồm nhiều slide, nối chặt) -->
-    <section class="slide slide--toc" data-i="1" id="slide-toc">
+    <!-- 1 · Interactive TOC -->
+    <section class="slide slide--toc" data-i="1">
       <div class="toc-shell">
-        <h2 class="toc-title"><span>Phụ lục</span>Luồng trình bày xuyên suốt</h2>
-        <nav class="toc-tree" aria-label="Mục lục trình bày">
+        <h2 class="toc-title gsap-reveal"><span>Mục lục</span>Lộ trình khám phá</h2>
+        <div class="toc-tree">
           <ul>
-            <li>
-              <div class="toc-node toc-node--root">
-                <strong>Chủ đề trung tâm</strong>
-                <span class="toc-meta">Một câu hỏi lớn kéo cả bài: kinh tế (CSHT) với chính trị — tư tưởng (KTTT) không phải quan hệ “cha — con” tuyến tính, mà quan hệ vật chất — ý thức biện chứng (GT 2021, tr. 137–141).</span>
-              </div>
+            <li class="toc-node toc-node--root gsap-reveal">
+              <strong>Trục nội dung</strong>
+              <span class="toc-meta">Cơ sở hạ tầng ⇄ Kiến trúc thượng tầng</span>
             </li>
-            <li>
-              <div class="toc-node">
-                <strong>Luồng 1 · Câu hỏi → phá ẩn dụ → thế đứng luận điểm</strong>
-                <span class="toc-meta">Hai slide liền mạch: đặt vấn đề bằng câu hỏi lớn; bác ẩn dụ “con nghe bố mẹ”, mở ra góc biện chứng (tránh quy giản, tránh lẫn CSHT với “hạ tầng kỹ thuật”).</span>
-              </div>
-            </li>
-            <li>
-              <div class="toc-node">
-                <strong>Luồng 2 · Khái niệm giáo trình &amp; cơ chế vận động</strong>
-                <span class="toc-meta">Trích dẫn CSHT, KTTT; quy luật QHSX ↔ LLSX (tr. 134) làm nền cho CQ7.4; ngay sau đó: độc lập tương đối, tác động ngược, lực quán tính — chuẩn bị chứng minh lịch sử.</span>
-              </div>
-            </li>
-            <li>
-              <div class="toc-node">
-                <strong>Luồng 3 · Một mạch lịch sử Việt Nam</strong>
-                <span class="toc-meta">Một slide kép: bản thể luận (KTTT lệch khách quan → khủng hoảng) và nhận thức luận (thực tiễn → Đại hội VI) là hai mặt cùng mâu thuẫn, không tách rời.</span>
-              </div>
-            </li>
-            <li>
-              <div class="toc-node">
-                <strong>Luồng 4 · Thực tiễn 2024–2026 &amp; Gen Z → kết luận trả lời câu hỏi mở đầu</strong>
-                <span class="toc-meta">Luật Đất đai 2024 và NQ 57 trên cùng logic “KTTT kiến tạo CSHT”; Gen Z đóng vòng hai chiều; kết luận khép lại rubric 1.1 (LO3, LO5, LO7).</span>
-              </div>
-            </li>
+            <ul>
+              <li class="toc-node gsap-reveal" data-target="2">
+                <strong>01. Đặt vấn đề</strong>
+                <span class="toc-meta">Câu hỏi mở đầu về quan hệ kinh tế - chính trị.</span>
+              </li>
+              <li class="toc-node gsap-reveal" data-target="4">
+                <strong>02. Hệ thống khái niệm</strong>
+                <span class="toc-meta">Định nghĩa CSHT & KTTT theo Giáo trình 2021.</span>
+              </li>
+              <li class="toc-node gsap-reveal" data-target="6">
+                <strong>03. Thực tiễn lịch sử</strong>
+                <span class="toc-meta">Bài học từ Đổi mới 1986 và quy luật khách quan.</span>
+              </li>
+              <li class="toc-node gsap-reveal" data-target="7">
+                <strong>04. Tầm nhìn hiện đại</strong>
+                <span class="toc-meta">Luật Đất đai 2024, NQ 57 và thế hệ Gen Z.</span>
+              </li>
+            </ul>
           </ul>
-        </nav>
+        </div>
       </div>
     </section>
-
-    <!-- 2 · Luồng 1 (1/2): cùng câu hỏi với bìa — mở “đầu dây” trả lời ở slide kết -->
     <section class="slide slide--content" data-i="2">
-      <header class="slide-chapter">
-        <span class="milestone">Luồng 1 · 1/2</span>
-        <span class="chapter-name">Câu hỏi lớn — kéo xuyên cả bài trình bày</span>
-      </header>
-      <div class="slide__grid">
-        <div class="slide-panel">
-          <span class="kicker">Đặt vấn đề</span>
-          <h2>“Con cái phải nghe bố mẹ” → “ai nắm kinh tế thì quyết định chính trị, tư tưởng”?</h2>
-          <p class="lead">Luận điểm cần bảo vệ: kinh tế (CSHT) <span class="highlight">quyết định trong xét đến cùng</span> đối với chính trị — tư tưởng (KTTT), nhưng <strong>không</strong> tạo ra mối quan hệ cha — con tuyến tính như trong gia đình. Đó là quan hệ <strong>vật chất — ý thức biện chứng</strong> (GT 2021, tr. 137–141).</p>
-          <p class="slide-bridge"><strong>Tiếp theo ngay:</strong> vì sao ẩn dụ gia đình là quy giản phương pháp luận — và cần tránh lẫn CSHT với “đường xá, cầu cống”.</p>
-        </div>
-        <aside class="slide-aside" aria-label="Mạch lý luận và minh họa slide 2">
-          <div class="link-strip" role="img" aria-label="Câu hỏi lớn không đồng nhất với quan hệ gia đình; đối tượng phân tích là CSHT và KTTT">
-            <span class="link-strip__item link-strip__item--q" title="Câu hỏi">CH</span>
-            <span class="link-strip__conn">→</span>
-            <span class="link-strip__item link-strip__item--fam">Gia đình</span>
-            <span class="link-strip__conn link-strip__conn--neq" title="Không đồng nhất">≠</span>
-            <span class="link-strip__item link-strip__item--csht">CSHT</span>
-            <span class="link-strip__conn">⇄</span>
-            <span class="link-strip__item link-strip__item--kttt">KTTT</span>
-          </div>
-          <figure class="slide-thumb">
-            <img src="assets/philo-01-base-superstructure.png" alt="Sơ đồ minh họa cơ sở hạ tầng và kiến trúc thượng tầng" width="640" height="360" loading="lazy" />
-            <figcaption>Minh họa 01 — mạch trả lời ở slide kết</figcaption>
-          </figure>
-        </aside>
+      <div class="slide-main">
+        <span class="milestone gsap-reveal">Phần 1 · 1/2</span>
+        <h2 class="gsap-reveal">“Con cái phải nghe bố mẹ” → “Kinh tế quyết định chính trị”?</h2>
+        <p class="lead gsap-reveal">Việc so sánh quan hệ sản xuất với quan hệ gia đình là một sự quy giản máy móc cần được làm rõ bằng lăng kính biện chứng.</p>
+        <ul class="points">
+          <li class="gsap-reveal">Kinh tế (CSHT) quyết định <strong>trong xét đến cùng</strong>.</li>
+          <li class="gsap-reveal">Không phải quan hệ "cha - con" tuyến tính.</li>
+          <li class="gsap-reveal">Là quan hệ vật chất - ý thức biện chứng (GT 2021).</li>
+        </ul>
       </div>
     </section>
 
-    <!-- 3 · Luồng 1 (2/2): nối thẳng từ câu hỏi slide 2 -->
-    <section class="slide slide--content" data-i="3">
-      <header class="slide-chapter">
-        <span class="milestone">Luồng 1 · 2/2</span>
-        <span class="chapter-name">Cùng luồng câu hỏi — phá ẩn dụ &amp; thế đứng điểm cao</span>
-      </header>
-      <div class="slide__grid">
-        <div class="slide-panel">
-          <p class="slide-bridge">Nối từ slide trước: ẩn dụ “con nghe bố mẹ” <strong>áp đặt quyền lực cá nhân</strong> lên cấu trúc xã hội — dễ dẫn tới tư duy máy móc “kinh tế tốt thì chính trị tự tốt”.</p>
-          <span class="kicker">Thế đứng rubric 1.1</span>
-          <h2>Bác bỏ quy giản — mở ra hai vecto phân tích</h2>
-          <p class="lead"><span class="highlight">Bản thể luận:</span> LLSX — QHSX là thực tại vật chất — xã hội khách quan; KTTT là phạm trù khác (quan niệm, thiết chế). <span class="highlight">Nhận thức luận:</span> ý thức không dừng ở phản ánh thụ động; thực tiễn khủng hoảng là tiêu chuẩn kiểm tra, buộc đổi mới tư duy (gợi CQ7.4–7.6).</p>
-          <ul class="points">
-            <li>Không dùng “giàu nghèo” thay cho phân tích <strong>giai cấp / QHSX</strong> (tránh trừ điểm).</li>
-            <li><strong>Slide sau</strong> neo khái niệm bằng chính lời giáo trình — rồi gắn cơ chế “độ trễ / tiên phong” để hiểu vì sao lịch sử &amp; thực tiễn VN minh họa được một mạch.</li>
-          </ul>
-        </div>
-        <aside class="slide-aside" aria-label="Phá ẩn dụ tuyến tính">
-          <div class="link-strip" role="img" aria-label="Tư duy tuyến tính khác biện chứng; đối tượng là CSHT và KTTT">
-            <span class="link-strip__item link-strip__item--fam">Tuyến tính</span>
-            <span class="link-strip__conn link-strip__conn--neq">≠</span>
-            <span class="link-strip__item link-strip__item--kttt">Biện chứng</span>
-            <span class="link-strip__conn">·</span>
-            <span class="link-strip__item link-strip__item--csht">CSHT</span>
-            <span class="link-strip__conn">⇄</span>
-            <span class="link-strip__item link-strip__item--kttt">KTTT</span>
-          </div>
-          <figure class="slide-thumb">
-            <img src="assets/philo-02-linear-vs-dialectic.png" alt="So sánh tư duy tuyến tính và biện chứng" width="640" height="360" loading="lazy" />
-            <figcaption>Minh họa 02 — gia đình ≠ khách quan XH</figcaption>
-          </figure>
-        </aside>
+    <!-- 3 · Luồng 1 · 2/2 -->
+    <section class="slide slide--content no-media" data-i="3">
+      <div class="slide-main">
+        <span class="milestone gsap-reveal">Phần 1 · 2/2</span>
+        <h2 class="gsap-reveal">Bác bỏ quy giản — Vượt qua tư duy máy móc</h2>
+        <p class="lead gsap-reveal">Ẩn dụ gia đình áp đặt quyền lực cá nhân lên cấu trúc xã hội khách quan, dẫn đến sai lầm trong quản lý vĩ mô.</p>
+        <ul class="points">
+          <li class="gsap-reveal"><strong>Bản thể luận:</strong> QHSX là thực tại vật chất xã hội.</li>
+          <li class="gsap-reveal"><strong>Nhận thức luận:</strong> Thực tiễn là tiêu chuẩn kiểm tra chân lý.</li>
+          <li class="gsap-reveal">KTTT không phản ánh thụ động mà có tính độc lập.</li>
+        </ul>
       </div>
     </section>
 
-    <!-- 4 · Luồng 2 (1/2): định nghĩa + nền quy luật biến đổi CSHT -->
+    <!-- 4 · Luồng 2 · 1/2 -->
     <section class="slide slide--content" data-i="4">
-      <header class="slide-chapter">
-        <span class="milestone">Luồng 2 · 1/2</span>
-        <span class="chapter-name">Khái niệm lõi — Giáo trình 2021 (tr. 137) &amp; nền khách quan (tr. 134)</span>
-      </header>
-      <div class="slide__grid">
-        <div class="slide-panel">
-          <p class="slide-bridge">Sau khi đã tách ẩn dụ gia đình khỏi CSHT — KTTT, ta <strong>định nghĩa chính xác</strong> để mọi slide thực tiễn cùng một chuẩn khái niệm.</p>
-          <span class="kicker">Trích khái niệm (GT 2021)</span>
-          <h2>CSHT · KTTT — cùng trang 137</h2>
-          <ul class="points">
-            <li><span class="highlight">CSHT</span> — “Toàn bộ những <strong>quan hệ sản xuất</strong>… hợp thành <strong>cơ cấu kinh tế</strong> của xã hội đó.” (tr. 137)</li>
-            <li><span class="highlight">KTTT</span> — “Toàn bộ những <strong>quan điểm, tư tưởng xã hội</strong> với những <strong>thiết chế</strong> tương ứng… trên một CSHT nhất định.” (tr. 137)</li>
-            <li><strong>Lưu ý CQ7.4:</strong> quy luật “QHSX phù hợp trình độ LLSX” là nền tảng khách quan quy định sự biến đổi CSHT (tr. 134) — sẽ nối vào mâu thuẫn 1976–1986 ở slide kế tiếp.</li>
-          </ul>
-        </div>
-        <aside class="slide-aside" aria-label="Giáo trình và phạm trù">
-          <div class="link-strip" role="img" aria-label="Giáo trình 2021 trang 137 và 134">
-            <span class="link-strip__item link-strip__item--kttt">GT 2021</span>
-            <span class="link-strip__conn">·</span>
-            <span class="link-strip__item link-strip__item--csht">tr.137</span>
-            <span class="link-strip__conn">+</span>
-            <span class="link-strip__item link-strip__item--csht">tr.134</span>
-          </div>
-          <figure class="slide-thumb">
-            <img src="assets/philo-03-categories-being-consciousness.png" alt="Phạm trù tồn tại và ý thức xã hội" width="640" height="360" loading="lazy" />
-            <figcaption>Minh họa 03 — từ vựng cho ví dụ sau</figcaption>
-          </figure>
-        </aside>
+      <div class="slide-main">
+        <span class="milestone gsap-reveal">Phần 2 · 1/2</span>
+        <h2 class="gsap-reveal">Khái niệm cốt lõi — Cơ sở hạ tầng & KTTT</h2>
+        <p class="lead gsap-reveal">Dựa trên Giáo trình 2021 (tr. 137), chúng ta xác lập các phạm trù khoa học để phân tích thực tiễn.</p>
+        <ul class="points">
+          <li class="gsap-reveal"><strong>CSHT:</strong> Toàn bộ QHSX hợp thành cơ cấu kinh tế.</li>
+          <li class="gsap-reveal"><strong>KTTT:</strong> Hệ thống quan điểm & thiết chế tương ứng.</li>
+          <li class="gsap-reveal">Quy luật QHSX phù hợp trình độ LLSX (tr. 134).</li>
+        </ul>
       </div>
     </section>
 
-    <!-- 5 · Luồng 2 (2/2): mối quan hệ biện chứng — chuẩn bị chứng minh lịch sử -->
+    <!-- 5 · Luồng 2 · 2/2 -->
     <section class="slide slide--content" data-i="5">
-      <header class="slide-chapter">
-        <span class="milestone">Luồng 2 · 2/2</span>
-        <span class="chapter-name">Cùng luồng lý thuyết — cơ chế vận động (tr. 138–141)</span>
-      </header>
-      <div class="slide__grid">
-        <div class="slide-panel">
-          <p class="slide-bridge">Trên nền khái niệm vừa neo: <strong>mối quan hệ biện chứng</strong> là “động cơ” để đọc vừa lịch sử vừa Luật đất — NQ 57 như <em>cùng một logic</em>, không rời rạc.</p>
-          <span class="kicker">Mối quan hệ biện chứng</span>
-          <h2>Quyết định &amp; tác động trở lại — độc lập tương đối</h2>
-          <p class="lead">“CSHT quyết định KTTT… KTTT có tính <span class="highlight">độc lập tương đối</span> và tác động trở lại <strong>to lớn, mạnh mẽ</strong> đối với CSHT.” (GT 2021, tr. 138–141)</p>
-          <ul class="points">
-            <li><strong>Nhân — quả:</strong> CSHT quy định nguồn gốc, nội dung, xu hướng KTTT; KTTT tác động ngược theo hai chiều: thúc đẩy nếu phản ánh đúng quy luật, kìm hãm nếu giáo điều / lạc hậu.</li>
-            <li><strong>Mâu thuẫn thể chế:</strong> “lực quán tính” ý thức — pháp luật so với kinh tế đổi nhanh (số, AI) — chính là cầu nối tới slide Luật đất + NQ 57.</li>
-          </ul>
-        </div>
-        <aside class="slide-aside" aria-label="Cơ chế hai chiều">
-          <div class="link-strip" role="img" aria-label="Cơ sở hạ tầng quyết định kiến trúc thượng tầng; kiến trúc thượng tầng tác động ngược">
-            <span class="link-strip__item link-strip__item--csht">CSHT</span>
-            <span class="link-strip__conn" title="Quyết định">→</span>
-            <span class="link-strip__item link-strip__item--kttt">KTTT</span>
-            <span class="link-strip__conn">|</span>
-            <span class="link-strip__item link-strip__item--kttt">KTTT</span>
-            <span class="link-strip__conn" title="Tác động ngược">⇢</span>
-            <span class="link-strip__item link-strip__item--csht">CSHT</span>
-          </div>
-          <figure class="slide-thumb">
-            <img src="assets/philo-04-dialectical-cycle.png" alt="Vòng biện chứng lạc hậu và vượt trước" width="640" height="360" loading="lazy" />
-            <figcaption>Minh họa 04 — lặp lại ở thực tiễn 2024–2026</figcaption>
-          </figure>
-        </aside>
+      <div class="slide-main">
+        <span class="milestone gsap-reveal">Phần 2 · 2/2</span>
+        <h2 class="gsap-reveal">Mối quan hệ biện chứng — Quyết định & Tác động</h2>
+        <p class="lead gsap-reveal">CSHT quyết định KTTT, nhưng KTTT có tính độc lập tương đối và tác động ngược mạnh mẽ.</p>
+        <ul class="points">
+          <li class="gsap-reveal">KTTT thúc đẩy nếu phản ánh đúng quy luật.</li>
+          <li class="gsap-reveal">KTTT kìm hãm nếu giáo điều hoặc lạc hậu.</li>
+          <li class="gsap-reveal">"Lực quán tính" của ý thức so với tốc độ kinh tế.</li>
+        </ul>
       </div>
     </section>
 
-    <!-- 6 · Luồng 3: một slide kép — hai mặt cùng mâu thuẫn (không tách rời) -->
+    <!-- 6 · Luồng 3 -->
     <section class="slide slide--content" data-i="6">
-      <header class="slide-chapter">
-        <span class="milestone">Luồng 3</span>
-        <span class="chapter-name">Một mạch lịch sử VN — từ mâu thuẫn khách quan tới đổi mới nhận thức</span>
-      </header>
-      <div class="slide__grid">
-        <div class="slide-panel">
-          <p class="slide-bridge">Áp dụng trực tiếp luồng 2: khi QHSX bị <strong>chủ quan</strong> đẩy nhanh không tương xứng LLSX (CQ7.4), mâu thuẫn bùng nổ ở tầng <strong>thực tại khách quan</strong>; Đại hội VI trả lời bằng <strong>đổi mới nhận thức</strong> — hai mặt không tách slide.</p>
-          <div class="two-col">
-            <div>
-              <span class="col-head">Bản thể luận · 1976–1986</span>
-              <p class="lead">LLSX — QHSX tồn tại khách quan; đường lối (KTTT) ép tập trung quan liêu, công hữu hóa triệt để khi điều kiện chưa đủ → <span class="highlight" style="color: var(--danger);">khủng hoảng kinh tế — xã hội</span> — minh chứng: tính khách quan không thể “giảm” bằng ý chí.</p>
-            </div>
-            <div>
-              <span class="col-head">Nhận thức luận · Đại hội VI (1986)</span>
-              <p class="lead">Thực tiễn là tiêu chuẩn kiểm tra chân lý → Đảng điều chỉnh tư duy; KTTT (đường lối, thể chế) <strong>vượt trước / mở đường</strong> cho kinh tế thị trường, đa thành phần (CSHT) — đúng cơ chế “tác động ngược” vừa lý luận hóa ở luồng 2.</p>
-            </div>
+      <div class="slide-main">
+        <span class="milestone gsap-reveal">Phần 3</span>
+        <h2 class="gsap-reveal">Lịch sử Việt Nam — Từ mâu thuẫn đến Đổi mới</h2>
+        <p class="lead gsap-reveal">Giai đoạn 1976–1986 là minh chứng sống động cho quy luật khách quan và sự tác động của thể chế.</p>
+        <div class="card-grid">
+          <div class="info-card gsap-reveal">
+            <h4 style="color: var(--accent);">Khủng hoảng (1976-86)</h4>
+            <p>Chủ quan ép QHSX vượt quá trình độ LLSX thực tế.</p>
           </div>
-          <p class="slide-bridge" style="margin-top: 0.75rem;"><strong>Sang thực tiễn đương đại:</strong> cùng cơ chế “KTTT kiến tạo / bắt kịp CSHT” — Luật Đất đai 2024 và NQ 57 trên <em>một slide kép</em> kế tiếp.</p>
+          <div class="info-card gsap-reveal">
+            <h4 style="color: var(--accent-gold);">Đổi mới (1986)</h4>
+            <p>Đổi mới tư duy (KTTT) mở đường cho kinh tế (CSHT).</p>
+          </div>
         </div>
-        <aside class="slide-aside" aria-label="Hai mặt lịch sử — hai minh họa">
-          <div class="link-strip" role="img" aria-label="Mâu thuẫn rồi đến đổi mới năm 1986">
-            <span class="link-strip__item link-strip__item--csht">1976–86</span>
-            <span class="link-strip__conn">→</span>
-            <span class="link-strip__item link-strip__item--kttt">ĐH VI</span>
-            <span class="link-strip__conn">·</span>
-            <span class="link-strip__item link-strip__item--csht">CSHT</span>
-            <span class="link-strip__conn">⇄</span>
-            <span class="link-strip__item link-strip__item--kttt">KTTT</span>
-          </div>
-          <div class="slide-thumb-row">
-            <figure class="slide-thumb">
-              <img src="assets/philo-05-contradiction-substance.png" alt="Mâu thuẫn khách quan và chính sách" width="400" height="280" loading="lazy" />
-              <figcaption>Minh họa 05 · mâu thuẫn</figcaption>
-            </figure>
-            <figure class="slide-thumb">
-              <img src="assets/philo-06-renewal-rupture.png" alt="Bước ngoặt đổi mới" width="400" height="280" loading="lazy" />
-              <figcaption>Minh họa 06 · đổi mới</figcaption>
-            </figure>
-          </div>
-        </aside>
       </div>
     </section>
 
-    <!-- 7 · Luồng 4 (1/2): hai ví dụ chính sách — cùng logic, cùng slide -->
+    <!-- 7 · Luồng 4 · 1/2 -->
     <section class="slide slide--content" data-i="7">
-      <header class="slide-chapter">
-        <span class="milestone">Luồng 4 · 1/2</span>
-        <span class="chapter-name">Thực tiễn 2024–2026 — cùng mạch “KTTT → tái cấu trúc QHSX”</span>
-      </header>
-      <div class="slide__grid">
-        <div class="slide-panel">
-          <p class="slide-bridge">Nối luồng 3: không chỉ “phản ánh” kinh tế, <strong>pháp luật — Nghị quyết</strong> đang chủ động tái định hình quan hệ sản xuất — phân phối.</p>
-          <div class="two-col">
-            <div>
-              <span class="col-head">Luật Đất đai 31/2024/QH15</span>
-              <p class="lead">Hiệu lực 01/01/2025. <strong>CSHT:</strong> quan hệ sở hữu, quản lý, phân phối lợi ích đất đai. <strong>KTTT:</strong> luật thể chế hóa chủ trương, bảng giá đất theo thị trường — minh bạch BĐS, giảm thiệt hại khi thu hồi.</p>
-            </div>
-            <div>
-              <span class="col-head">NQ 57-NQ/TW (22/12/2024)</span>
-              <p class="lead">Đột phá KHCN, đổi mới sáng tạo, chuyển đổi số. <strong>CSHT:</strong> kinh tế số, dữ liệu, AI. <strong>KTTT:</strong> chủ trương tạo hành lang — mục tiêu kinh tế số ~30% GDP 2030; kinh tế số đổi nhanh lại đòi hỏi hoàn thiện thể chế mới.</p>
-            </div>
-          </div>
-          <ul class="points">
-            <li>Hai ví dụ <strong>cùng rubric 1.5</strong>: KTTT không “chạy sau” thụ động mà kiến tạo / định hướng lại CSHT.</li>
-          </ul>
-        </div>
-        <aside class="slide-aside" aria-label="Luật đất và chuyển đổi số — hai ảnh riêng">
-          <div class="link-strip" role="img" aria-label="Pháp luật đất đai và nghị quyết chuyển đổi số cùng tác động vào quan hệ sản xuất">
-            <span class="link-strip__item link-strip__item--kttt">Luật đất</span>
-            <span class="link-strip__conn">&amp;</span>
-            <span class="link-strip__item link-strip__item--kttt">NQ57</span>
-            <span class="link-strip__conn">→</span>
-            <span class="link-strip__item link-strip__item--csht">QHSX</span>
-          </div>
-          <div class="slide-thumb-row">
-            <figure class="slide-thumb">
-              <img src="assets/philo-07-land-law-relations.png" alt="Pháp luật và quan hệ đất đai" width="400" height="280" loading="lazy" />
-              <figcaption>Minh họa 07 · đất đai</figcaption>
-            </figure>
-            <figure class="slide-thumb">
-              <img src="assets/philo-08-productive-forces-digital.png" alt="Lực lượng sản xuất số" width="400" height="280" loading="lazy" />
-              <figcaption>Minh họa 08 · kinh tế số</figcaption>
-            </figure>
-          </div>
-        </aside>
+      <div class="slide-main">
+        <span class="milestone gsap-reveal">Phần 4 · 1/2</span>
+        <h2 class="gsap-reveal">Thực tiễn hiện đại — Kiến tạo Thể chế</h2>
+        <p class="lead gsap-reveal">KTTT không "chạy sau" thụ động mà đang chủ động định hình quan hệ sản xuất mới.</p>
+        <ul class="points">
+          <li class="gsap-reveal"><strong>Luật Đất đai 2024:</strong> Thể chế hóa thị trường BĐS.</li>
+          <li class="gsap-reveal"><strong>NQ 57 (2024):</strong> Hành lang pháp lý cho Kinh tế số.</li>
+          <li class="gsap-reveal">Mục tiêu Kinh tế số chiếm ~30% GDP vào năm 2030.</li>
+        </ul>
       </div>
     </section>
 
-    <!-- 8 · Luồng 4 (2/2): Gen Z đóng vòng hai chiều với chính NQ 57 &amp; kinh tế số -->
+    <!-- 8 · Luồng 4 · 2/2 -->
     <section class="slide slide--content" data-i="8">
-      <header class="slide-chapter">
-        <span class="milestone">Luồng 4 · 2/2</span>
-        <span class="chapter-name">Cùng luồng thực tiễn — Gen Z &amp; vòng lặp CSHT ↔ KTTT</span>
-      </header>
-      <div class="slide__grid">
-        <div class="slide-panel">
-          <p class="slide-bridge">Cùng “mảnh” kinh tế số với cột phải slide trước: Gen Z là <strong>lực lượng thực tiễn</strong> làm sống động hai chiều CSHT ↔ KTTT trong đời sống hằng ngày.</p>
-          <span class="kicker">Bối cảnh Gen Z — không tách khỏi NQ 57</span>
-          <h2>Lao động số, khởi nghiệp &amp; văn hóa tiêu dùng nền tảng</h2>
-          <div class="two-col">
-            <div>
-              <span class="col-head">CSHT → KTTT</span>
-              <p class="lead">Nền tảng công nghệ, nền tảng số, thị trường việc làm linh hoạt → hình thành <em>ý thức</em> làm chủ công cụ số, tư duy đổi mới trong lao động.</p>
-            </div>
-            <div>
-              <span class="col-head">KTTT → CSHT</span>
-              <p class="lead">Tư duy tiêu dùng (xanh, minh bạch, nền tảng) tác động ngược vào <strong>tổ chức sản xuất — phân phối</strong> (chuỗi cung ứng, mô hình affiliate, trách nhiệm doanh nghiệp).</p>
-            </div>
-          </div>
-          <p class="lead" style="margin-top: 0.65rem; font-size: clamp(0.88rem, 1.15vw, 0.98rem); color: var(--muted);">LO3 · LO5 · LO7: đánh giá hình thái KT-XH &amp; ý thức xã hội; vận dụng quy luật vào thực tiễn; củng cố niềm tin vào thể chế kiến tạo phù hợp quy luật khách quan.</p>
-        </div>
-        <aside class="slide-aside" aria-label="Gen Z và vòng thực tiễn">
-          <div class="link-strip" role="img" aria-label="Kinh tế số và Gen Z hai chiều với quan hệ sản xuất">
-            <span class="link-strip__item link-strip__item--kttt">NQ57</span>
-            <span class="link-strip__conn">·</span>
-            <span class="link-strip__item link-strip__item--fam">Gen Z</span>
-            <span class="link-strip__conn">⇄</span>
-            <span class="link-strip__item link-strip__item--csht">CSHT</span>
-          </div>
-          <figure class="slide-thumb">
-            <img src="assets/philo-09-praxis-consciousness-loop.png" alt="Vòng thực tiễn ý thức và kinh tế" width="640" height="360" loading="lazy" />
-            <figcaption>Minh họa 09 — vòng lặp hai chiều</figcaption>
-          </figure>
-        </aside>
+      <div class="slide-main">
+        <span class="milestone gsap-reveal">Phần 4 · 2/2</span>
+        <h2 class="gsap-reveal">Thế hệ Gen Z — Vòng thực tiễn số</h2>
+        <p class="lead gsap-reveal">Gen Z là lực lượng lao động làm sống động mối quan hệ biện chứng trong nền kinh tế nền tảng.</p>
+        <ul class="points">
+          <li class="gsap-reveal"><strong>CSHT → KTTT:</strong> Công nghệ hình thành ý thức số.</li>
+          <li class="gsap-reveal"><strong>KTTT → CSHT:</strong> Tư duy tiêu dùng xanh đổi mới sản xuất.</li>
+          <li class="gsap-reveal">LO3 · LO5 · LO7: Vận dụng quy luật vào thực tiễn.</li>
+        </ul>
       </div>
     </section>
 
-    <!-- 9 · Kết luận — trả lời thẳng câu hỏi slide 2 (layout giống slide nội dung, ảnh nhỏ) -->
-    <section class="slide slide--content slide--outro" data-i="9">
-      <header class="slide-chapter">
-        <span class="milestone">Kết luận</span>
-        <span class="chapter-name">Khép luồng — từ slide 2 đến đây</span>
-      </header>
-      <div class="slide__grid">
-        <div class="slide-panel">
-          <p class="slide-bridge">Trả lời đúng câu hỏi đã treo từ đầu: <strong>không</strong> vì quan hệ gia đình; vì quan hệ <strong>vật chất — ý thức biện chứng</strong> và vì KTTT có độc lập tương đối.</p>
-          <span class="kicker">Kết luận biện chứng</span>
-          <h2 class="outro-title">Kinh tế là nền tảng — chính trị &amp; tư tưởng <em>không</em> là cái bóng thụ động</h2>
-          <p class="lead">Ai nắm vị thế kinh tế <strong>không</strong> tự động “quyết định” mọi chính trị theo kiểu tuyến tính. Ở Việt Nam đương đại, Đảng và Nhà nước (KTTT) cùng hệ thống pháp luật đang <span class="highlight">chủ động kiến tạo thể chế</span> để định hướng QHSX phù hợp LLSX — thống nhất với bài học lịch sử và với Luật Đất đai 2024, NQ 57.</p>
-          <p class="lead thanks">Cảm ơn thầy cô và các bạn đã lắng nghe.</p>
-        </div>
-        <aside class="slide-aside" aria-label="Tổng hợp luồng trình bày">
-          <div class="link-strip" role="img" aria-label="Từ câu hỏi đến khái niệm lịch sử thực tiễn và kết luận">
-            <span class="link-strip__item link-strip__item--q">CH</span>
-            <span class="link-strip__conn">→</span>
-            <span class="link-strip__item link-strip__item--kttt">Lý thuyết</span>
-            <span class="link-strip__conn">→</span>
-            <span class="link-strip__item link-strip__item--csht">LS + TH</span>
-            <span class="link-strip__conn">→</span>
-            <span class="link-strip__item link-strip__item--kttt">KL</span>
-          </div>
-          <figure class="slide-thumb">
-            <img src="assets/philo-10-synthesis-harmony.png" alt="Thống nhất biện chứng kinh tế và thể chế" width="640" height="360" loading="lazy" />
-            <figcaption>Minh họa 10 — tổng hợp</figcaption>
-          </figure>
-        </aside>
+    <!-- 9 · Kết luận -->
+    <section class="slide slide--content no-media" data-i="9">
+      <div class="slide-main">
+        <span class="milestone gsap-reveal">Kết thúc</span>
+        <h2 class="gsap-reveal">Kết luận Biện chứng</h2>
+        <p class="lead gsap-reveal">Kinh tế là nền tảng, nhưng Chính trị/Tư tưởng không bao giờ là cái bóng thụ động.</p>
+        <p class="gsap-reveal" style="font-size: 1.1rem; color: var(--accent-gold); font-weight: 500;">Ở Việt Nam, Nhà nước đang chủ động kiến tạo thể chế để bắt kịp và dẫn dắt sự phát triển của lực lượng sản xuất.</p>
+        <p class="gsap-reveal" style="margin-top: 2rem; font-family: var(--font-serif); font-size: 1.5rem;">Trân trọng cảm ơn sự theo dõi.</p>
       </div>
     </section>
   </div>
@@ -1313,266 +1436,192 @@
   </div>
 
   <script>
-    (function () {
-      const slides = Array.from(document.querySelectorAll(".slide"));
-      const total = slides.length;
-      let index = 0;
-      let animating = false;
-      const progress = document.getElementById("progress");
-      const counter = document.getElementById("counter");
-      const hint = document.getElementById("hint");
-      const cover = document.getElementById("slide-cover");
-      const toc = document.getElementById("slide-toc");
-      const prefersReduced =
-        typeof window.matchMedia === "function" &&
-        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.addEventListener("DOMContentLoaded", () => {
+      // Initialize Lenis for smooth scroll
+      const lenis = new Lenis({
+        duration: 1.2,
+        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        wheelMultiplier: 1,
+        touchMultiplier: 2,
+        infinite: false,
+      });
 
-      function updateUI() {
-        progress.style.transform = "scaleX(" + (index + 1) / total + ")";
-        counter.innerHTML = "<strong>" + String(index + 1).padStart(2, "0") + "</strong> / " + total;
-        if (index === 0) {
-          counter.classList.add("counter--hidden");
-          hint.classList.add("hint--cover");
-        } else {
-          counter.classList.remove("counter--hidden");
-          hint.classList.remove("hint--cover");
-        }
+      // Sync Lenis with ScrollTrigger
+      lenis.on('scroll', ScrollTrigger.update);
+
+      // Reset to top after layout calculation
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        lenis.scrollTo(0, { immediate: true });
+        ScrollTrigger.refresh();
+      }, 100);
+
+      function raf(time) {
+        lenis.raf(time);
+        requestAnimationFrame(raf);
       }
+      requestAnimationFrame(raf);
 
-      function standardGoTo(next) {
-        if (next < 0 || next >= total || next === index || animating) return;
-        const forward = next > index;
-        const prevEl = slides[index];
-        const nextEl = slides[next];
-        const scrollMs =
-          parseFloat(
-            getComputedStyle(document.documentElement).getPropertyValue("--scroll-dur").trim() || "0.82"
-          ) * 1000 || 820;
+      // Register GSAP plugins
+      gsap.registerPlugin(ScrollTrigger);
 
-        if (prefersReduced) {
-          prevEl.classList.remove("active");
-          prevEl.style.visibility = "hidden";
-          prevEl.style.opacity = "0";
-          nextEl.classList.add("active");
-          nextEl.style.visibility = "visible";
-          nextEl.style.opacity = "1";
-          index = next;
-          updateUI();
-          return;
-        }
+      const slides = gsap.utils.toArray(".slide");
+      const totalSlides = slides.length;
+      const progressFill = document.getElementById("progress-fill");
+      const currentSlideText = document.getElementById("current-slide");
+      const totalSlidesText = document.getElementById("total-slides");
+      const navContainer = document.getElementById("slide-nav");
 
-        animating = true;
-        let finished = false;
-        const outCls = forward ? "slide-anim-out-up" : "slide-anim-out-down";
-        const inCls = forward ? "slide-anim-in-up" : "slide-anim-in-down";
+      totalSlidesText.innerText = String(totalSlides).padStart(2, "0");
 
-        function cleanup() {
-          if (finished) return;
-          finished = true;
-          prevEl.classList.remove("active", "slide-anim-out-up", "slide-anim-out-down");
-          prevEl.style.visibility = "hidden";
-          prevEl.style.opacity = "0";
-          nextEl.classList.remove("slide-anim-in-up", "slide-anim-in-down");
-          nextEl.classList.add("active");
-          index = next;
-          animating = false;
-          updateUI();
-        }
+      // Create Navigation Dots
+      slides.forEach((_, i) => {
+        const dot = document.createElement("div");
+        dot.className = `nav-dot ${i === 0 ? 'active' : ''}`;
+        dot.addEventListener("click", () => {
+          lenis.scrollTo(slides[i]);
+        });
+        navContainer.appendChild(dot);
+      });
 
-        nextEl.classList.add(inCls);
+      const navDots = document.querySelectorAll(".nav-dot");
 
-        requestAnimationFrame(function () {
-          requestAnimationFrame(function () {
-            prevEl.classList.add(outCls);
-          });
+      // Slide-based animations
+      slides.forEach((slide, i) => {
+        const index = i; // using actual index
+        
+        // Update UI markers on scroll
+        ScrollTrigger.create({
+          trigger: slide,
+          start: "top center",
+          end: "bottom center",
+          onToggle: (self) => {
+            if (self.isActive) {
+              currentSlideText.innerText = String(index + 1).padStart(2, "0");
+              navDots.forEach(dot => dot.classList.remove("active"));
+              navDots[index].classList.add("active");
+              progressFill.style.width = `${((index + 1) / totalSlides) * 100}%`;
+            }
+          }
         });
 
-        nextEl.addEventListener(
-          "animationend",
-          function onEnd(e) {
-            if (e.target !== nextEl) return;
-            if (
-              e.animationName !== "scroll-in-from-bottom" &&
-              e.animationName !== "scroll-in-from-top"
-            ) {
-              return;
-            }
-            nextEl.removeEventListener("animationend", onEnd);
-            cleanup();
+        // Content Animations
+        const reveals = slide.querySelectorAll(".gsap-reveal");
+        if (reveals.length) {
+          gsap.to(reveals, {
+            scrollTrigger: {
+              trigger: slide,
+              start: "top 60%",
+              toggleActions: "play none none reverse"
+            },
+            y: 0,
+            opacity: 1,
+            autoAlpha: 1, // handles visibility: hidden automatically
+            duration: 1,
+            stagger: 0.1,
+            ease: "power3.out"
+          });
+        }
+
+        // Parallax for images
+        const img = slide.querySelector(".slide-thumb img");
+        if (img) {
+          gsap.to(img, {
+            scrollTrigger: {
+              trigger: slide,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true
+            },
+            y: -80,
+            ease: "none"
+          });
+        }
+
+        // Hero Background Parallax
+        if (slide.classList.contains("slide--cover")) {
+          const bg = slide.querySelector(".slide-cover-bg");
+          gsap.to(bg, {
+            scrollTrigger: {
+              trigger: slide,
+              start: "top top",
+              end: "bottom top",
+              scrub: true
+            },
+            scale: 1.15,
+            y: 150,
+            ease: "none"
+          });
+        }
+      });
+
+      // Start button logic
+      const startBtn = document.querySelector('.btn-start');
+      if (startBtn) {
+        startBtn.addEventListener('click', () => {
+          lenis.scrollTo(slides[1]);
+        });
+      }
+
+      // TOC Card Navigation
+      document.querySelectorAll('.toc-node[data-target]').forEach(node => {
+        node.addEventListener('click', () => {
+          const targetIndex = node.getAttribute('data-target');
+          if (targetIndex !== null) {
+            lenis.scrollTo(slides[parseInt(targetIndex)]);
           }
-        );
-
-        setTimeout(cleanup, scrollMs + 80);
-      }
-
-      function transitionCoverToToc() {
-        if (animating || index !== 0) return;
-        if (prefersReduced) {
-          cover.classList.remove("active");
-          index = 1;
-          toc.classList.add("active");
-          updateUI();
-          return;
-        }
-        animating = true;
-        cover.classList.add("cover--exiting");
-        toc.classList.add("active", "toc--entering");
-        setTimeout(function () {
-          cover.classList.remove("active", "cover--exiting");
-          toc.classList.remove("toc--entering");
-          index = 1;
-          animating = false;
-          updateUI();
-        }, 1150);
-      }
-
-      function transitionTocToCover() {
-        if (animating || index !== 1) return;
-        if (prefersReduced) {
-          toc.classList.remove("active");
-          index = 0;
-          cover.classList.add("active");
-          updateUI();
-          return;
-        }
-        animating = true;
-        toc.classList.add("toc--exiting");
-        cover.classList.add("active", "cover--entering");
-        setTimeout(function () {
-          toc.classList.remove("active", "toc--exiting");
-          cover.classList.remove("cover--entering");
-          index = 0;
-          animating = false;
-          updateUI();
-        }, 1000);
-      }
-
-      function goTo(next) {
-        if (next < 0 || next >= total || next === index || animating) return;
-        if (index === 0 && next === 1) {
-          transitionCoverToToc();
-          return;
-        }
-        if (index === 1 && next === 0) {
-          transitionTocToCover();
-          return;
-        }
-        standardGoTo(next);
-      }
-
-      function next() {
-        if (index === 0) {
-          transitionCoverToToc();
-          return;
-        }
-        goTo(Math.min(index + 1, total - 1));
-      }
-
-      function prev() {
-        if (index === 1) {
-          transitionTocToCover();
-          return;
-        }
-        goTo(Math.max(index - 1, 0));
-      }
-
-      document.getElementById("btn-start").addEventListener("click", function () {
-        transitionCoverToToc();
+        });
       });
 
-      document.getElementById("btn-next").addEventListener("click", next);
-      document.getElementById("btn-prev").addEventListener("click", prev);
+      // Bottom Control Buttons
+      const btnPrev = document.getElementById('btn-prev');
+      const btnNext = document.getElementById('btn-next');
+      const btnFs = document.getElementById('btn-fs');
 
-      document.getElementById("btn-fs").addEventListener("click", function () {
-        const d = document.documentElement;
-        if (!document.fullscreenElement) d.requestFullscreen().catch(function () {});
-        else document.exitFullscreen();
-      });
+      if (btnPrev) {
+        btnPrev.addEventListener('click', () => {
+          const activeSlideIndex = Math.round(window.scrollY / window.innerHeight);
+          lenis.scrollTo(slides[Math.max(activeSlideIndex - 1, 0)]);
+        });
+      }
 
-      document.addEventListener("keydown", function (e) {
-        if (animating) {
-          e.preventDefault();
-          return;
-        }
-        if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
-          e.preventDefault();
-          next();
-        } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
-          e.preventDefault();
-          prev();
-        } else if (e.key === "Home") {
-          e.preventDefault();
-          goTo(0);
-        } else if (e.key === "End") {
-          e.preventDefault();
-          goTo(total - 1);
-        } else if (e.key.toLowerCase() === "f") {
-          document.getElementById("btn-fs").click();
-        }
-      });
+      if (btnNext) {
+        btnNext.addEventListener('click', () => {
+          const activeSlideIndex = Math.round(window.scrollY / window.innerHeight);
+          lenis.scrollTo(slides[Math.min(activeSlideIndex + 1, totalSlides - 1)]);
+        });
+      }
 
-      let touchStartX = null;
-      let touchStartY = null;
-      document.addEventListener(
-        "touchstart",
-        function (e) {
-          touchStartX = e.changedTouches[0].screenX;
-          touchStartY = e.changedTouches[0].screenY;
-        },
-        { passive: true }
-      );
-      document.addEventListener(
-        "touchend",
-        function (e) {
-          if (touchStartX === null || animating) return;
-          const dx = e.changedTouches[0].screenX - touchStartX;
-          const dy = e.changedTouches[0].screenY - touchStartY;
-          touchStartX = null;
-          touchStartY = null;
-          if (Math.max(Math.abs(dx), Math.abs(dy)) < 48) return;
-          if (Math.abs(dy) >= Math.abs(dx)) {
-            if (dy < 0) next();
-            else prev();
+      if (btnFs) {
+        btnFs.addEventListener('click', () => {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+              console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+            });
           } else {
-            if (dx < 0) next();
-            else prev();
+            document.exitFullscreen();
           }
-        },
-        { passive: true }
-      );
+        });
+      }
 
-      let lastWheel = 0;
-      document.addEventListener(
-        "wheel",
-        function (e) {
-          if (animating) {
-            e.preventDefault();
-            return;
-          }
-          const shell = e.target.closest(".toc-shell");
-          if (shell && shell.scrollHeight > shell.clientHeight + 4) {
-            const atTop = shell.scrollTop <= 1;
-            const atBot = shell.scrollTop + shell.clientHeight >= shell.scrollHeight - 4;
-            if (!(atTop && e.deltaY < 0) && !(atBot && e.deltaY > 0)) {
-              return;
-            }
-          }
-          if (Math.abs(e.deltaY) < 18) return;
-          const now = Date.now();
-          if (now - lastWheel < 620) {
-            e.preventDefault();
-            return;
-          }
-          lastWheel = now;
+      // Keyboard Assist
+      window.addEventListener("keydown", (e) => {
+        const activeSlideIndex = Math.round(window.scrollY / window.innerHeight);
+        if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "PageDown") {
           e.preventDefault();
-          if (e.deltaY > 0) next();
-          else prev();
-        },
-        { passive: false }
-      );
+          lenis.scrollTo(slides[Math.min(activeSlideIndex + 1, totalSlides - 1)]);
+        } else if (e.key === "ArrowUp" || e.key === "ArrowLeft" || e.key === "PageUp") {
+          e.preventDefault();
+          lenis.scrollTo(slides[Math.max(activeSlideIndex - 1, 0)]);
+        }
+      });
 
-      updateUI();
-    })();
+      // Handle resize
+      window.addEventListener("resize", () => {
+        ScrollTrigger.refresh();
+      });
+    });
   </script>
 </body>
 </html>
+
