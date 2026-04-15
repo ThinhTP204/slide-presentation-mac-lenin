@@ -11,7 +11,6 @@
   <!-- Libraries -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-  <script src="https://unpkg.com/lenis@1.1.20/dist/lenis.min.js"></script>
   <style>
     :root {
       --bg: #050505;
@@ -20,6 +19,8 @@
       --muted: #a0a0a0;
       --accent: #bd1e1e; /* Academic Crimson */
       --accent-gold: #cfb53b; /* Metallic Gold */
+      --accent2: #5ee1d0;
+      --danger: #e85a5a;
       --glass: rgba(255, 255, 255, 0.03);
       --glass-border: rgba(255, 255, 255, 0.08);
       
@@ -30,6 +31,25 @@
       
       --ease: cubic-bezier(0.23, 1, 0.32, 1);
       --dur: 0.8s;
+
+      /* Header dòng kẻ neon (đồng bộ phụ lục · bìa · nội dung) */
+      --header-neon: #8efff0;
+      --header-neon-core: #5ee1d0;
+      --header-neon-glow: rgba(100, 240, 220, 0.75);
+
+      --surface: rgba(12, 16, 28, 0.72);
+      --surface-elevated: rgba(18, 24, 42, 0.88);
+      --surface-border: rgba(255, 255, 255, 0.09);
+      --surface-border-strong: rgba(94, 225, 208, 0.22);
+      --shadow-card: 0 18px 48px rgba(0, 0, 0, 0.42);
+      --radius-card: 18px;
+
+      /* Độ rộng cột nội dung slide (tăng so với 920px trước đây) */
+      --content-col-max: min(96vw, 1200px);
+      --content-prose-max: min(78ch, 100%);
+
+      --card-shine: rgba(255, 255, 255, 0.045);
+      --card-edge: rgba(255, 255, 255, 0.11);
     }
 
     @keyframes scroll-out-up {
@@ -75,7 +95,8 @@
     }
 
     html {
-      scroll-behavior: initial;
+      scroll-behavior: smooth;
+      scroll-snap-type: y mandatory;
     }
 
     body {
@@ -96,13 +117,23 @@
       width: 100%;
     }
 
-    section {
+    section.slide {
       height: 100vh;
+      height: 100dvh;
+      min-height: 100vh;
       width: 100%;
       position: relative;
-      overflow: hidden;
+      overflow-x: hidden;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      flex-shrink: 0;
+    }
+
+    section.slide.slide--content {
+      overflow-x: visible;
     }
 
     /* —— Slide bìa —— */
@@ -132,17 +163,14 @@
     .slide-cover-inner {
       position: relative;
       z-index: 2;
-      max-width: 1200px;
+      width: 100%;
+      max-width: none;
+      padding-inline: clamp(1rem, 4vw, 3rem);
+      box-sizing: border-box;
     }
 
     .cover-kicker {
-      font-family: var(--font-display);
-      text-transform: uppercase;
-      letter-spacing: 0.5em;
-      color: var(--accent);
-      font-size: 1.2rem;
-      margin-bottom: 2rem;
-      display: block;
+      margin-bottom: clamp(1.25rem, 3vh, 2rem);
     }
 
     h1.hero-title {
@@ -232,69 +260,6 @@
       border: 0;
     }
 
-    /* —— TOC Slide —— */
-    .slide--toc {
-      padding: 4rem;
-      background: var(--bg-alt);
-    }
-
-    .toc-shell {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .toc-title {
-      font-family: var(--font-serif);
-      font-size: 4rem;
-      margin-bottom: 3rem;
-    }
-
-    .toc-title span {
-      display: block;
-      font-family: var(--font-display);
-      font-size: 1.2rem;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.3em;
-    }
-
-    .toc-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      flex: 1;
-    }
-
-    .toc-card {
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      padding: 2rem;
-      backdrop-filter: blur(10px);
-      transition: all 0.3s var(--ease);
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .toc-card:hover {
-      border-color: var(--accent);
-      background: rgba(189, 30, 30, 0.05);
-      transform: translateY(-5px);
-    }
-
-    .toc-card strong {
-      font-family: var(--font-serif);
-      font-size: 1.5rem;
-      color: var(--accent-gold);
-    }
-
-    .toc-card span {
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
     /* —— Content Slides —— */
     .slide--content {
       display: grid;
@@ -307,15 +272,74 @@
     .slide-main {
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: clamp(1.15rem, 2.2vh, 1.65rem);
     }
 
-    .milestone {
-      font-family: var(--font-display);
-      color: var(--accent);
+    /* —— Header neon + đường kẻ tắt (phụ lục / bìa / slide nội dung) —— */
+    .toc-eyebrow,
+    .slide--cover .cover-kicker,
+    .slide--content .milestone {
+      box-sizing: border-box;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(0.55rem, 1.8vw, 1rem);
+      font-family: var(--font-display), "Inter", system-ui, sans-serif;
+      font-size: clamp(0.52rem, 0.85vw, 0.72rem);
+      font-weight: 800;
+      letter-spacing: 0.26em;
       text-transform: uppercase;
-      letter-spacing: 0.2em;
-      font-size: 1rem;
+      color: var(--header-neon-core);
+      text-shadow:
+        0 0 6px var(--header-neon-glow),
+        0 0 16px rgba(64, 220, 200, 0.5),
+        0 0 32px rgba(40, 180, 160, 0.22);
+    }
+
+    .toc-eyebrow,
+    .slide--cover .cover-kicker {
+      display: inline-flex;
+      max-width: 100%;
+    }
+
+    .slide--content .milestone {
+      display: flex;
+      width: 100%;
+      max-width: var(--content-col-max);
+      margin-inline: auto;
+      text-align: center;
+      line-height: 1.35;
+    }
+
+    .slide--content .milestone__text {
+      flex: 0 1 auto;
+      min-width: 0;
+    }
+
+    .toc-eyebrow::before,
+    .toc-eyebrow::after,
+    .slide--cover .cover-kicker::before,
+    .slide--cover .cover-kicker::after,
+    .slide--content .milestone::before,
+    .slide--content .milestone::after {
+      content: "";
+      flex: 1 1 0;
+      height: 1px;
+      min-width: 1.25rem;
+      max-width: min(30vw, 220px);
+    }
+
+    .toc-eyebrow::before,
+    .slide--cover .cover-kicker::before,
+    .slide--content .milestone::before {
+      background: linear-gradient(90deg, transparent, var(--header-neon));
+      box-shadow: 0 0 8px rgba(94, 225, 208, 0.55), 0 0 18px rgba(50, 200, 180, 0.28);
+    }
+
+    .toc-eyebrow::after,
+    .slide--cover .cover-kicker::after,
+    .slide--content .milestone::after {
+      background: linear-gradient(90deg, var(--header-neon), transparent);
+      box-shadow: 0 0 8px rgba(94, 225, 208, 0.55), 0 0 18px rgba(50, 200, 180, 0.28);
     }
 
     h2 {
@@ -498,118 +522,192 @@
       h2 { font-size: 2rem; }
     }
 
-    /* —— Phụ lục dạng cây —— */
+    /* —— Phụ lục trình chiếu —— */
     .slide--toc {
       grid-template-columns: 1fr;
-      padding: clamp(1.25rem, 3vw, 2.5rem);
+      padding: clamp(1rem, 3vh, 2rem) clamp(1rem, 4vw, 2rem);
       align-items: center;
       justify-content: center;
       background:
-        radial-gradient(ellipse 100% 80% at 50% 0%, rgba(61, 214, 199, 0.06), transparent 50%),
-        var(--bg);
+        radial-gradient(ellipse 130% 100% at 50% -25%, rgba(189, 30, 30, 0.16), transparent 52%),
+        radial-gradient(ellipse 90% 70% at 100% 40%, rgba(94, 225, 208, 0.09), transparent 48%),
+        radial-gradient(ellipse 70% 55% at 0% 85%, rgba(207, 181, 59, 0.07), transparent 42%),
+        linear-gradient(180deg, #070910 0%, #050505 42%, #040306 100%);
     }
 
     .toc-shell {
-      width: min(1100px, 96vw);
-      max-height: min(90vh, 900px);
+      width: min(1120px, 94vw);
+      max-height: min(92vh, 900px);
       overflow: auto;
-      padding: clamp(1rem, 2vw, 1.5rem);
+      margin-inline: auto;
+      padding: clamp(1rem, 2.5vw, 1.75rem);
+      display: flex;
+      flex-direction: column;
+      gap: clamp(1.1rem, 2.5vh, 1.75rem);
+    }
+
+    .toc-header {
+      text-align: center;
+      max-width: min(40rem, 100%);
+      margin-inline: auto;
+    }
+
+    .toc-header .toc-eyebrow {
+      display: flex;
+      width: 100%;
+      margin-bottom: 0.65rem;
     }
 
     .toc-title {
-      font-family: "Instrument Serif", Georgia, serif;
-      font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+      font-family: var(--font-serif);
+      font-size: clamp(2rem, 4.8vw, 3.2rem);
       font-weight: 400;
-      margin-bottom: clamp(1.25rem, 2.5vw, 2rem);
-      text-align: center;
-      color: #fff;
+      line-height: 1.06;
+      margin: 0 0 0.5rem;
+      color: #faf7f2;
     }
 
-    .toc-title span {
-      display: block;
-      font-size: clamp(0.78rem, 1vw, 0.92rem);
-      font-family: "Be Vietnam Pro", sans-serif;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.35rem;
+    .toc-title em {
+      font-style: italic;
+      color: var(--accent-gold);
     }
 
-    .toc-tree {
+    .toc-lead {
+      font-size: clamp(0.9rem, 1.25vw, 1.02rem);
+      color: rgba(154, 162, 182, 0.95);
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .toc-hero {
       position: relative;
-      padding-left: 0.5rem;
+      padding: clamp(1.15rem, 2.4vw, 1.55rem) clamp(1.2rem, 2.8vw, 1.65rem);
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(22, 28, 44, 0.95), rgba(10, 12, 20, 0.92));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow:
+        0 0 0 1px rgba(189, 30, 30, 0.1),
+        0 20px 50px rgba(0, 0, 0, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
 
-    .toc-tree ul {
+    .toc-hero-label {
+      font-family: var(--font-display);
+      font-size: 0.68rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent-gold);
+      margin-bottom: 0.4rem;
+    }
+
+    .toc-hero-title {
+      font-family: var(--font-vn);
+      font-size: clamp(1.08rem, 1.85vw, 1.28rem);
+      font-weight: 700;
+      color: #fff;
+      margin: 0 0 0.45rem;
+      line-height: 1.25;
+    }
+
+    .toc-hero .toc-meta {
+      font-size: clamp(0.84rem, 1.15vw, 0.96rem);
+      color: rgba(176, 184, 204, 0.95);
+      line-height: 1.5;
+    }
+
+    .toc-list {
       list-style: none;
       margin: 0;
-      padding: 0 0 0 1.25rem;
-      border-left: 2px solid rgba(232, 197, 71, 0.25);
+      padding: 0;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: clamp(0.55rem, 1.2vw, 0.75rem);
     }
 
-    .toc-tree > ul {
-      border-left: none;
-      padding-left: 0;
+    @media (min-width: 720px) {
+      .toc-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .toc-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.7rem 0.85rem;
+      }
     }
 
     .toc-node {
-      position: relative;
-      margin-bottom: clamp(0.65rem, 1.2vw, 1rem);
-      padding: 0.65rem 0 0.65rem 1rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.85rem 1rem;
+      padding: clamp(0.75rem, 1.5vw, 0.95rem) clamp(0.85rem, 1.8vw, 1.1rem);
       border-radius: 12px;
-      background: rgba(18, 24, 42, 0.45);
+      background: rgba(14, 16, 26, 0.72);
       border: 1px solid rgba(255, 255, 255, 0.06);
-      opacity: 1;
-      transform: none;
-      filter: none;
+      transition:
+        border-color 0.25s var(--ease),
+        background 0.25s var(--ease),
+        transform 0.25s var(--ease),
+        box-shadow 0.25s var(--ease);
     }
 
-    .slide--toc.active .toc-node {
-      animation: none;
+    .toc-node[data-target] {
+      cursor: pointer;
     }
 
-    .slide--toc.active .toc-node:nth-child(1) { animation-delay: 0.05s; }
-    .slide--toc.active .toc-node:nth-child(2) { animation-delay: 0.14s; }
-    .slide--toc.active .toc-node:nth-child(3) { animation-delay: 0.23s; }
-    .slide--toc.active .toc-node:nth-child(4) { animation-delay: 0.32s; }
-    .slide--toc.active .toc-node:nth-child(5) { animation-delay: 0.41s; }
-    .slide--toc.active .toc-node:nth-child(6) { animation-delay: 0.5s; }
-    .slide--toc.active .toc-node:nth-child(7) { animation-delay: 0.59s; }
-    .slide--toc.active .toc-node:nth-child(8) { animation-delay: 0.68s; }
-
-    .slide--toc.active .toc-tree ul ul .toc-node {
-      animation-delay: 0.85s;
+    .toc-node[data-target]:hover {
+      border-color: rgba(94, 225, 208, 0.28);
+      background: rgba(20, 26, 42, 0.88);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
     }
 
-    @keyframes tocNodeIn {
-      to {
-        opacity: 1;
-        transform: translateX(0) translateY(0);
-        filter: blur(0);
-      }
+    .toc-node[data-target]:active {
+      transform: translateY(0);
+    }
+
+    .toc-node[data-target]:focus-visible {
+      outline: 2px solid rgba(94, 225, 208, 0.65);
+      outline-offset: 2px;
+    }
+
+    .toc-num {
+      flex-shrink: 0;
+      min-width: 2.35rem;
+      padding: 0.2rem 0;
+      font-family: var(--font-display);
+      font-size: clamp(0.78rem, 1.1vw, 0.88rem);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--accent);
+      text-align: center;
+      line-height: 1.2;
+      border-radius: 8px;
+      background: rgba(189, 30, 30, 0.14);
+      border: 1px solid rgba(189, 30, 30, 0.28);
+    }
+
+    .toc-node-body {
+      min-width: 0;
+      flex: 1;
     }
 
     .toc-node strong {
       display: block;
-      font-size: clamp(0.95rem, 1.35vw, 1.12rem);
-      color: #fff;
+      font-family: var(--font-vn);
+      font-size: clamp(0.92rem, 1.3vw, 1.05rem);
+      font-weight: 600;
+      color: #f4f5f8;
       margin-bottom: 0.2rem;
+      line-height: 1.3;
     }
 
     .toc-node .toc-meta {
-      font-size: clamp(0.82rem, 1.1vw, 0.95rem);
-      color: var(--muted);
+      display: block;
+      font-size: clamp(0.78rem, 1.05vw, 0.9rem);
+      color: rgba(148, 156, 176, 0.98);
       line-height: 1.45;
-    }
-
-    .toc-node--root {
-      background: linear-gradient(135deg, rgba(232, 197, 71, 0.12), rgba(61, 214, 199, 0.08));
-      border-color: rgba(232, 197, 71, 0.25);
-      margin-bottom: 1.25rem;
-    }
-
-    .toc-node--root strong {
-      font-size: clamp(1.05rem, 1.5vw, 1.25rem);
     }
 
     .slide--toc .gsap-reveal {
@@ -642,7 +740,7 @@
       }
     }
 
-    /* —— Slide nội dung: mốc + lưới rõ ràng —— */
+    /* —— Slide nội dung —— */
     .slide--content {
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: minmax(0, 1fr);
@@ -662,19 +760,140 @@
     }
 
     .slide--content.no-media .slide-main {
-      max-width: 980px;
+      max-width: var(--content-col-max);
     }
 
     .slide--content .slide-main {
-      max-width: 1100px;
-      width: min(100%, 1100px);
+      max-width: var(--content-col-max);
+      width: 100%;
+      margin-block: auto;
+      flex: 0 1 auto;
+      padding: clamp(1.35rem, 3vw, 2rem) clamp(1rem, 3vw, 1.5rem);
+      padding-top: clamp(2.1rem, 4.5vh, 3.25rem);
+      border-radius: 20px;
+      background: linear-gradient(165deg, rgba(16, 20, 36, 0.45) 0%, rgba(6, 8, 14, 0.25) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        0 24px 80px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(14px);
     }
 
     .slide--content h2 {
-      font-size: clamp(2.15rem, 4.8vw, 3.4rem);
+      font-size: clamp(2.35rem, 5.2vw, 3.85rem);
       letter-spacing: 0;
       font-family: var(--font-vn);
       font-weight: 600;
+    }
+
+    /* Tiêu đề slide: full chiều ngang viewport + gạch gradient dưới */
+    .slide.slide--content .slide-main > h2 {
+      position: relative;
+      width: 100vw;
+      max-width: 100vw;
+      margin-left: calc(50% - 50vw);
+      margin-right: calc(50% - 50vw);
+      margin-bottom: clamp(0.35rem, 1.2vh, 0.75rem);
+      padding-inline: clamp(1.25rem, 5vw, 4rem);
+      padding-bottom: clamp(0.75rem, 2vh, 1.15rem);
+      box-sizing: border-box;
+      text-align: center;
+      line-height: 1.12;
+      font-size: clamp(2.55rem, 6.2vw, 4.35rem);
+      color: #f6f7fb;
+      text-shadow: 0 2px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .slide.slide--content .slide-main > h2::after {
+      content: "";
+      display: block;
+      width: min(11rem, 42vw);
+      height: 2px;
+      margin: clamp(0.55rem, 1.4vh, 0.95rem) auto 0;
+      border-radius: 2px;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(94, 225, 208, 0.35) 20%,
+        var(--accent-gold) 50%,
+        rgba(189, 30, 30, 0.55) 78%,
+        transparent
+      );
+      box-shadow: 0 0 14px rgba(94, 225, 208, 0.2);
+    }
+
+    .slide--content .lead,
+    .slide--content .slide-panel .lead {
+      font-size: clamp(1.12rem, 2vw, 1.52rem);
+      line-height: 1.58;
+      max-width: var(--content-prose-max);
+      margin-inline: auto;
+      color: rgba(218, 224, 240, 0.94);
+    }
+
+    .slide--content .lead--note {
+      margin-top: clamp(0.85rem, 2vh, 1.25rem);
+      padding: clamp(0.95rem, 2vw, 1.2rem) clamp(1.05rem, 2.2vw, 1.35rem);
+      border-radius: var(--radius-card);
+      border: 1px dashed rgba(94, 225, 208, 0.38);
+      background: rgba(8, 40, 42, 0.28);
+      box-shadow: inset 0 0 0 1px rgba(94, 225, 208, 0.06);
+    }
+
+    .slide--content .lead--note code {
+      font-size: 0.88em;
+      padding: 0.12em 0.35em;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .slide--content .lead--after-list {
+      margin-top: clamp(0.85rem, 2vh, 1.2rem);
+    }
+
+    .slide--content ul.points {
+      margin-top: clamp(0.35rem, 1vh, 0.65rem);
+    }
+
+    .question-block {
+      font-family: var(--font-vn);
+      font-size: clamp(1.12rem, 1.95vw, 1.42rem);
+      font-weight: 600;
+      line-height: 1.5;
+      padding: clamp(1.05rem, 2vw, 1.35rem) clamp(1.15rem, 2.2vw, 1.45rem);
+      margin: clamp(0.25rem, 1vh, 0.5rem) auto clamp(0.75rem, 2vh, 1.1rem);
+      max-width: var(--content-prose-max);
+      border-radius: var(--radius-card);
+      border: 1px solid rgba(189, 30, 30, 0.35);
+      border-left: 4px solid var(--accent);
+      background: linear-gradient(135deg, rgba(90, 20, 28, 0.35), rgba(18, 22, 38, 0.85));
+      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      color: #f0e8ec;
+    }
+
+    .cite-footer {
+      margin-top: clamp(1rem, 2.5vh, 1.5rem);
+      padding-top: clamp(0.75rem, 1.8vh, 1rem);
+      border-top: 1px solid rgba(207, 181, 59, 0.2);
+      font-size: clamp(0.86rem, 1.15vw, 0.98rem);
+      color: rgba(232, 210, 120, 0.95);
+      font-style: italic;
+      text-align: center;
+      letter-spacing: 0.02em;
+    }
+
+    .apa-list {
+      list-style: none;
+      margin: 0.75rem 0 0;
+      padding: 0;
+      font-size: clamp(0.82rem, 1.15vw, 0.98rem);
+      color: rgba(200, 206, 220, 0.95);
+    }
+
+    .apa-list li {
+      padding: 0.45rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     }
 
     .slide-chapter {
@@ -686,18 +905,14 @@
       border-bottom: 1px solid rgba(232, 197, 71, 0.15);
     }
 
-    .milestone {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.35rem 0.85rem;
-      font-size: clamp(0.72rem, 0.95vw, 0.82rem);
-      font-weight: 800;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: #0a0e1a;
-      background: linear-gradient(135deg, var(--accent), #c9a82e);
-      border-radius: 6px;
-      box-shadow: 0 2px 12px rgba(232, 197, 71, 0.25);
+    .slide.slide--cover .slide-cover-inner {
+      padding-top: clamp(1.5rem, 4vh, 2.75rem);
+    }
+
+    .slide.slide--content .slide-main > .milestone:first-child {
+      margin-top: 0;
+      margin-bottom: clamp(0.25rem, 1vh, 0.65rem);
+      pointer-events: none;
     }
 
     .chapter-name {
@@ -916,14 +1131,29 @@
 
     .slide.slide--toc {
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       grid-template-columns: unset;
+      padding-block: clamp(1rem, 3vh, 2rem);
     }
 
     .slide.slide--content {
-      grid-template-columns: 1fr;
-      grid-template-rows: auto minmax(0, 1fr);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      grid-template-columns: unset;
+      grid-template-rows: unset;
+      min-height: 100%;
+      box-sizing: border-box;
+      padding: clamp(1rem, 3.5vh, 2.25rem) clamp(0.75rem, 2.5vw, 1.5rem);
+      gap: 0;
+      background:
+        radial-gradient(ellipse 100% 80% at 50% 0%, rgba(189, 30, 30, 0.08), transparent 55%),
+        radial-gradient(ellipse 90% 70% at 100% 30%, rgba(94, 225, 208, 0.06), transparent 50%),
+        radial-gradient(ellipse 70% 50% at 0% 100%, rgba(207, 181, 59, 0.05), transparent 45%),
+        linear-gradient(180deg, #06070c 0%, var(--bg) 35%, #040406 100%);
     }
 
     .slide.slide--outro {
@@ -981,7 +1211,10 @@
       padding: clamp(0.25rem, 1vw, 0.75rem) 0;
     }
 
-    .slide--content .slide-panel .lead,
+    .slide--content .slide-panel .lead {
+      max-width: var(--content-prose-max);
+    }
+
     .slide--outro .slide-panel .lead {
       max-width: min(68ch, 100%);
     }
@@ -1034,23 +1267,72 @@
     ul.points {
       list-style: none;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: clamp(0.75rem, 1.2vw, 1.1rem);
-      margin-top: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+      gap: clamp(0.95rem, 1.8vw, 1.35rem);
+      margin-top: clamp(0.65rem, 1.5vh, 1rem);
     }
 
     ul.points li {
       position: relative;
-      padding: 1rem 1.1rem;
-      font-size: clamp(1rem, 1.45vw, 1.18rem);
-      line-height: 1.55;
-      color: #d7def2;
-      background: rgba(18, 24, 42, 0.72);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 14px;
-      box-shadow: 0 16px 36px rgba(4, 8, 20, 0.4);
+      padding: clamp(1.2rem, 2.2vw, 1.5rem) clamp(1.2rem, 2.4vw, 1.45rem);
+      padding-top: clamp(1.4rem, 2.5vw, 1.7rem);
+      font-size: clamp(0.98rem, 1.42vw, 1.12rem);
+      line-height: 1.58;
+      color: rgba(224, 230, 248, 0.97);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--card-edge);
+      background:
+        radial-gradient(ellipse 95% 70% at 100% 0%, rgba(94, 225, 208, 0.09), transparent 52%),
+        radial-gradient(ellipse 80% 55% at 0% 100%, rgba(189, 30, 30, 0.07), transparent 48%),
+        linear-gradient(168deg, rgba(28, 34, 54, 0.96) 0%, rgba(14, 18, 32, 0.94) 100%);
+      box-shadow:
+        var(--shadow-card),
+        inset 0 1px 0 rgba(255, 255, 255, 0.07),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(14px);
       opacity: 0;
-      transform: translateX(-16px);
+      transform: translateY(12px);
+      transition:
+        border-color 0.3s var(--ease),
+        box-shadow 0.3s var(--ease),
+        transform 0.3s var(--ease);
+      overflow: hidden;
+    }
+
+    .slide--content ul.points li::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      border-radius: var(--radius-card) var(--radius-card) 0 0;
+      z-index: 0;
+    }
+
+    .slide--content ul.points li:nth-child(3n + 1)::before {
+      background: linear-gradient(90deg, transparent 0%, var(--accent2) 38%, rgba(94, 225, 208, 0.35) 72%, transparent 100%);
+      box-shadow: 0 0 18px rgba(94, 225, 208, 0.35);
+    }
+
+    .slide--content ul.points li:nth-child(3n + 2)::before {
+      background: linear-gradient(90deg, transparent 0%, var(--accent-gold) 40%, rgba(232, 200, 90, 0.4) 70%, transparent 100%);
+      box-shadow: 0 0 16px rgba(207, 181, 59, 0.28);
+    }
+
+    .slide--content ul.points li:nth-child(3n)::before {
+      background: linear-gradient(90deg, transparent 0%, var(--accent) 42%, rgba(189, 30, 30, 0.45) 68%, transparent 100%);
+      box-shadow: 0 0 16px rgba(189, 30, 30, 0.22);
+    }
+
+    .slide--content ul.points li:hover {
+      border-color: rgba(94, 225, 208, 0.28);
+      transform: translateY(-2px);
+      box-shadow:
+        var(--shadow-card),
+        0 0 0 1px rgba(94, 225, 208, 0.12),
+        0 22px 48px rgba(0, 0, 0, 0.48),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
 
     .slide.active ul.points li {
@@ -1063,32 +1345,173 @@
     .slide.active ul.points li:nth-child(4) { animation-delay: 0.56s; }
     .slide.active ul.points li:nth-child(5) { animation-delay: 0.68s; }
 
-    ul.points li::before { content: none; }
-
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: clamp(0.85rem, 1.6vw, 1.35rem);
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+      gap: clamp(1rem, 2vw, 1.35rem);
+      margin-top: clamp(0.85rem, 2vh, 1.2rem);
+    }
+
+    .slide--content .card-grid + ul.points {
+      margin-top: clamp(1rem, 2.2vh, 1.35rem);
+    }
+
+    /** Biện chứng 1 (slide 7): 2×2 đều nhau */
+    .card-grid--2x2 {
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      align-items: stretch;
+    }
+
+    @media (max-width: 720px) {
+      .card-grid--2x2 {
+        grid-template-columns: 1fr;
+        grid-template-rows: none;
+      }
+    }
+
+    /** Slide 9: 2 card trên + 1 card dưới full */
+    .card-stack-9 {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(0.85rem, 1.6vw, 1.25rem);
       margin-top: 1.1rem;
+      width: 100%;
+    }
+
+    .card-stack-9 .card-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(0.85rem, 1.6vw, 1.35rem);
+      align-items: stretch;
+    }
+
+    @media (max-width: 720px) {
+      .card-stack-9 .card-row-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card-stack-9 .info-card--wide {
+      width: 100%;
     }
 
     .info-card {
-      padding: 1rem 1.1rem;
-      border-radius: 14px;
-      background: rgba(18, 24, 42, 0.78);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 16px 36px rgba(4, 8, 20, 0.4);
+      position: relative;
+      padding: clamp(1.2rem, 2.2vw, 1.55rem) clamp(1.25rem, 2.5vw, 1.6rem);
+      padding-top: clamp(1.45rem, 2.6vw, 1.85rem);
+      border-radius: var(--radius-card);
+      border: 1px solid var(--card-edge);
+      background:
+        radial-gradient(ellipse 100% 75% at 100% 0%, rgba(94, 225, 208, 0.1), transparent 55%),
+        radial-gradient(ellipse 85% 60% at 0% 100%, rgba(207, 181, 59, 0.06), transparent 50%),
+        linear-gradient(170deg, rgba(30, 36, 58, 0.98) 0%, rgba(16, 20, 38, 0.95) 48%, rgba(10, 12, 24, 0.96) 100%);
+      box-shadow:
+        var(--shadow-card),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+      transition: transform 0.35s var(--ease), border-color 0.35s var(--ease), box-shadow 0.35s var(--ease);
+    }
+
+    .info-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      z-index: 1;
+      background: linear-gradient(90deg, var(--accent2) 0%, var(--accent-gold) 42%, var(--accent) 100%);
+      box-shadow: 0 4px 20px rgba(94, 225, 208, 0.22);
+    }
+
+    .card-grid .info-card:nth-child(3n + 1)::before {
+      background: linear-gradient(90deg, rgba(94, 225, 208, 0.35) 0%, var(--accent2) 45%, rgba(64, 200, 185, 0.9) 100%);
+    }
+
+    .card-grid .info-card:nth-child(3n + 2)::before {
+      background: linear-gradient(90deg, rgba(207, 181, 59, 0.4) 0%, var(--accent-gold) 50%, rgba(240, 210, 120, 0.95) 100%);
+      box-shadow: 0 4px 20px rgba(207, 181, 59, 0.2);
+    }
+
+    .card-grid .info-card:nth-child(3n)::before {
+      background: linear-gradient(90deg, rgba(189, 30, 30, 0.5) 0%, var(--accent) 48%, rgba(220, 60, 55, 0.85) 100%);
+      box-shadow: 0 4px 20px rgba(189, 30, 30, 0.2);
+    }
+
+    .info-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      z-index: 0;
+      background: linear-gradient(155deg, var(--card-shine) 0%, transparent 40%, transparent 58%, rgba(0, 0, 0, 0.12));
+    }
+
+    .info-card--wide {
+      padding-top: clamp(1.55rem, 2.8vw, 1.95rem);
+    }
+
+    .info-card--wide::before {
+      height: 5px;
+      background: linear-gradient(
+        90deg,
+        var(--accent2),
+        var(--accent-gold) 33%,
+        var(--accent) 66%,
+        rgba(94, 225, 208, 0.85)
+      );
+      box-shadow: 0 4px 24px rgba(94, 225, 208, 0.25), 0 4px 20px rgba(189, 30, 30, 0.15);
+    }
+
+    .slide--content .info-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(94, 225, 208, 0.32);
+      box-shadow:
+        var(--shadow-card),
+        0 0 0 1px rgba(94, 225, 208, 0.14),
+        0 28px 64px rgba(0, 0, 0, 0.52),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
     }
 
     .info-card h4 {
-      margin-bottom: 0.5rem;
-      font-size: 1.05rem;
-      letter-spacing: 0.02em;
+      position: relative;
+      margin: 0 0 0.65rem;
+      padding-bottom: 0.5rem;
+      font-size: clamp(1.04rem, 1.48vw, 1.2rem);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      font-family: var(--font-vn);
+      z-index: 2;
+    }
+
+    .info-card h4::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 2.75rem;
+      height: 3px;
+      border-radius: 3px;
+      background: currentColor;
+      opacity: 0.45;
     }
 
     .info-card p {
-      font-size: 0.98rem;
-      color: var(--muted);
+      position: relative;
+      margin: 0;
+      font-size: clamp(0.95rem, 1.38vw, 1.08rem);
+      color: rgba(202, 210, 232, 0.95);
+      line-height: 1.56;
+      z-index: 2;
+    }
+
+    .info-card p strong {
+      color: #f2f4fc;
+      font-weight: 700;
     }
 
     .tag {
@@ -1130,7 +1553,11 @@
       .slide--content,
       .slide--outro {
         overflow-y: auto;
-        align-items: start;
+        align-items: center;
+      }
+
+      .slide.slide--content {
+        justify-content: center;
       }
 
       .slide--content .slide__grid,
@@ -1182,7 +1609,7 @@
     }
 
     @keyframes slideIn {
-      to { opacity: 1; transform: translateX(0); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     /* UI chrome */
@@ -1288,6 +1715,10 @@
 
     /* Reduced motion */
     @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+        scroll-snap-type: none;
+      }
       .slide, .slide-thumb img, ul.points li {
         animation: none !important;
         transition: none !important;
@@ -1336,150 +1767,239 @@
       </div>
     </section>
 
-    <!-- 1 · Interactive TOC -->
+    <!-- 1 · Mục lục -->
     <section class="slide slide--toc" data-i="1">
       <div class="toc-shell">
-        <h2 class="toc-title gsap-reveal"><span>Mục lục</span>Lộ trình khám phá</h2>
-        <div class="toc-tree">
-          <ul>
-            <li class="toc-node toc-node--root gsap-reveal">
-              <strong>Trục nội dung</strong>
-              <span class="toc-meta">Cơ sở hạ tầng ⇄ Kiến trúc thượng tầng</span>
-            </li>
-            <ul>
-              <li class="toc-node gsap-reveal" data-target="2">
-                <strong>01. Đặt vấn đề</strong>
-                <span class="toc-meta">Câu hỏi mở đầu về quan hệ kinh tế - chính trị.</span>
-              </li>
-              <li class="toc-node gsap-reveal" data-target="4">
-                <strong>02. Hệ thống khái niệm</strong>
-                <span class="toc-meta">Định nghĩa CSHT & KTTT theo Giáo trình 2021.</span>
-              </li>
-              <li class="toc-node gsap-reveal" data-target="6">
-                <strong>03. Thực tiễn lịch sử</strong>
-                <span class="toc-meta">Bài học từ Đổi mới 1986 và quy luật khách quan.</span>
-              </li>
-              <li class="toc-node gsap-reveal" data-target="7">
-                <strong>04. Tầm nhìn hiện đại</strong>
-                <span class="toc-meta">Luật Đất đai 2024, NQ 57 và thế hệ Gen Z.</span>
-              </li>
-            </ul>
-          </ul>
+        <header class="toc-header gsap-reveal">
+          <p class="toc-eyebrow">Phụ lục · Trang 0</p>
+          <h2 class="toc-title">Mục lục <em>trình chiếu</em></h2>
+          <p class="toc-lead">Chọn một mục để nhảy tới slide tương ứng — hoặc dùng phím mũi tên / nút điều hướng.</p>
+        </header>
+
+        <div class="toc-hero gsap-reveal" aria-labelledby="toc-hero-heading">
+          <p class="toc-hero-label">Chủ đề báo cáo</p>
+          <h3 class="toc-hero-title" id="toc-hero-heading">Chủ đề #03 — CSHT &amp; KTTT</h3>
+          <span class="toc-meta">Theo Giáo trình Triết học Mác–Lênin (2021), tr. 137–141</span>
         </div>
-      </div>
-    </section>
-    <section class="slide slide--content" data-i="2">
-      <div class="slide-main">
-        <span class="milestone gsap-reveal">Phần 1 · 1/2</span>
-        <h2 class="gsap-reveal">“Con cái phải nghe bố mẹ” → “Kinh tế quyết định chính trị”?</h2>
-        <p class="lead gsap-reveal">Việc so sánh quan hệ sản xuất với quan hệ gia đình là một sự quy giản máy móc cần được làm rõ bằng lăng kính biện chứng.</p>
-        <ul class="points">
-          <li class="gsap-reveal">Kinh tế (CSHT) quyết định <strong>trong xét đến cùng</strong>.</li>
-          <li class="gsap-reveal">Không phải quan hệ "cha - con" tuyến tính.</li>
-          <li class="gsap-reveal">Là quan hệ vật chất - ý thức biện chứng (GT 2021).</li>
-        </ul>
+
+        <nav class="toc-nav gsap-reveal" aria-label="Danh sách slide nội dung">
+          <ul class="toc-list">
+            <li class="toc-node gsap-reveal" data-target="2" role="button" tabindex="0">
+              <span class="toc-num" aria-hidden="true">02</span>
+              <div class="toc-node-body">
+                <strong>Bối cảnh</strong>
+                <span class="toc-meta">Câu hỏi — tiếp cận — nguyên lý</span>
+              </div>
+            </li>
+            <li class="toc-node gsap-reveal" data-target="3" role="button" tabindex="0">
+              <span class="toc-num" aria-hidden="true">03</span>
+              <div class="toc-node-body">
+                <strong>Tóm tắt nhận định</strong>
+                <span class="toc-meta">Kết luận mở đầu &amp; hướng phân tích</span>
+              </div>
+            </li>
+            <li class="toc-node gsap-reveal" data-target="4" role="button" tabindex="0">
+              <span class="toc-num" aria-hidden="true">04</span>
+              <div class="toc-node-body">
+                <strong>Khái niệm cơ sở hạ tầng</strong>
+                <span class="toc-meta">Định nghĩa &amp; cấu trúc QHSX</span>
+              </div>
+            </li>
+            <li class="toc-node gsap-reveal" data-target="5" role="button" tabindex="0">
+              <span class="toc-num" aria-hidden="true">05</span>
+              <div class="toc-node-body">
+                <strong>Khái niệm KTTT</strong>
+                <span class="toc-meta">Định nghĩa — gợi ý minh họa</span>
+              </div>
+            </li>
+            <li class="toc-node gsap-reveal" data-target="6" role="button" tabindex="0">
+              <span class="toc-num" aria-hidden="true">06</span>
+              <div class="toc-node-body">
+                <strong>Cấu trúc KTTT</strong>
+                <span class="toc-meta">Ý thức xã hội &amp; thiết chế</span>
+              </div>
+            </li>
+            <li class="toc-node gsap-reveal" data-target="7" role="button" tabindex="0">
+              <span class="toc-num" aria-hidden="true">07</span>
+              <div class="toc-node-body">
+                <strong>Biện chứng CSHT — KTTT (1)</strong>
+                <span class="toc-meta">Vai trò quyết định của CSHT</span>
+              </div>
+            </li>
+            <li class="toc-node gsap-reveal" data-target="8" role="button" tabindex="0">
+              <span class="toc-num" aria-hidden="true">08</span>
+              <div class="toc-node-body">
+                <strong>Biện chứng CSHT — KTTT (2)</strong>
+                <span class="toc-meta">Tác động trở lại &amp; độc lập tương đối</span>
+              </div>
+            </li>
+            <li class="toc-node gsap-reveal" data-target="9" role="button" tabindex="0">
+              <span class="toc-num" aria-hidden="true">09</span>
+              <div class="toc-node-body">
+                <strong>Dẫn chứng</strong>
+                <span class="toc-meta">Liên hệ lý thuyết — thực tiễn — Gen Z</span>
+              </div>
+            </li>
+          </ul>
+        </nav>
       </div>
     </section>
 
-    <!-- 3 · Luồng 1 · 2/2 -->
+    <!-- 2 · Bối cảnh -->
+    <section class="slide slide--content no-media" data-i="2">
+      <div class="slide-main">
+        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 1 · Bối cảnh</span></span>
+        <h2 class="gsap-reveal">Câu hỏi mở đầu</h2>
+        <p class="question-block gsap-reveal">« Con cái phải nghe lời bố mẹ » — có phải vì vậy mà trong xã hội, <strong>ai nắm quyền kinh tế</strong> sẽ <strong>quyết định chính trị, tư tưởng</strong>?</p>
+        <p class="lead gsap-reveal"><strong>Tiếp cận:</strong> Quy luật về mối quan hệ <em>biện chứng</em> giữa <strong>cơ sở hạ tầng</strong> và <strong>kiến trúc thượng tầng</strong> — không quy giản máy móc ẩn dụ gia đình sang cấu trúc giai cấp – xã hội.</p>
+        <ul class="points">
+          <li class="gsap-reveal"><strong>Nguyên lý 1:</strong> Quan hệ vật chất quyết định quan hệ tinh thần.</li>
+          <li class="gsap-reveal"><strong>Nguyên lý 2:</strong> Tính tất yếu <em>kinh tế</em> (xét đến cùng) quyết định tính tất yếu <em>chính trị – xã hội</em>.</li>
+        </ul>
+        <p class="cite-footer gsap-reveal">Giáo trình Triết học Mác–Lênin (2021), chương về CSHT &amp; KTTT.</p>
+      </div>
+    </section>
+
+    <!-- 3 · Tóm tắt nhận định -->
     <section class="slide slide--content no-media" data-i="3">
       <div class="slide-main">
-        <span class="milestone gsap-reveal">Phần 1 · 2/2</span>
-        <h2 class="gsap-reveal">Bác bỏ quy giản — Vượt qua tư duy máy móc</h2>
-        <p class="lead gsap-reveal">Ẩn dụ gia đình áp đặt quyền lực cá nhân lên cấu trúc xã hội khách quan, dẫn đến sai lầm trong quản lý vĩ mô.</p>
+        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 1 · Kết luận phần mở</span></span>
+        <h2 class="gsap-reveal">Nhận định &amp; bổ sung toàn diện</h2>
         <ul class="points">
-          <li class="gsap-reveal"><strong>Bản thể luận:</strong> QHSX là thực tại vật chất xã hội.</li>
-          <li class="gsap-reveal"><strong>Nhận thức luận:</strong> Thực tiễn là tiêu chuẩn kiểm tra chân lý.</li>
-          <li class="gsap-reveal">KTTT không phản ánh thụ động mà có tính độc lập.</li>
+          <li class="gsap-reveal">Trong xã hội <strong>có đối kháng giai cấp</strong>, giai cấp thống trị <strong>về kinh tế</strong> cũng thống trị trong đời sống <strong>chính trị, tinh thần</strong>.</li>
+          <li class="gsap-reveal">Mọi hiện tượng KTTT (chính trị, pháp luật, đạo đức…) <strong>xét đến cùng</strong> phụ thuộc CSHT và <strong>do CSHT quyết định</strong>.</li>
+          <li class="gsap-reveal"><strong>Tuy nhiên:</strong> KTTT <em>không thụ động</em> — có <strong>tính độc lập tương đối</strong>, thường xuyên tác động mạnh <strong>trở lại</strong> CSHT kinh tế.</li>
         </ul>
+        <p class="lead lead--after-list gsap-reveal">→ Các slide sau: làm rõ <strong>khái niệm</strong>, <strong>cấu trúc</strong>, <strong>quy luật biện chứng</strong> và <strong>dẫn chứng</strong> thực tiễn.</p>
       </div>
     </section>
 
-    <!-- 4 · Luồng 2 · 1/2 -->
-    <section class="slide slide--content" data-i="4">
+    <!-- 4 · CSHT -->
+    <section class="slide slide--content no-media" data-i="4">
       <div class="slide-main">
-        <span class="milestone gsap-reveal">Phần 2 · 1/2</span>
-        <h2 class="gsap-reveal">Khái niệm cốt lõi — Cơ sở hạ tầng & KTTT</h2>
-        <p class="lead gsap-reveal">Dựa trên Giáo trình 2021 (tr. 137), chúng ta xác lập các phạm trù khoa học để phân tích thực tiễn.</p>
-        <ul class="points">
-          <li class="gsap-reveal"><strong>CSHT:</strong> Toàn bộ QHSX hợp thành cơ cấu kinh tế.</li>
-          <li class="gsap-reveal"><strong>KTTT:</strong> Hệ thống quan điểm & thiết chế tương ứng.</li>
-          <li class="gsap-reveal">Quy luật QHSX phù hợp trình độ LLSX (tr. 134).</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- 5 · Luồng 2 · 2/2 -->
-    <section class="slide slide--content" data-i="5">
-      <div class="slide-main">
-        <span class="milestone gsap-reveal">Phần 2 · 2/2</span>
-        <h2 class="gsap-reveal">Mối quan hệ biện chứng — Quyết định & Tác động</h2>
-        <p class="lead gsap-reveal">CSHT quyết định KTTT, nhưng KTTT có tính độc lập tương đối và tác động ngược mạnh mẽ.</p>
-        <ul class="points">
-          <li class="gsap-reveal">KTTT thúc đẩy nếu phản ánh đúng quy luật.</li>
-          <li class="gsap-reveal">KTTT kìm hãm nếu giáo điều hoặc lạc hậu.</li>
-          <li class="gsap-reveal">"Lực quán tính" của ý thức so với tốc độ kinh tế.</li>
-        </ul>
-      </div>
-    </section>
-
-    <!-- 6 · Luồng 3 -->
-    <section class="slide slide--content" data-i="6">
-      <div class="slide-main">
-        <span class="milestone gsap-reveal">Phần 3</span>
-        <h2 class="gsap-reveal">Lịch sử Việt Nam — Từ mâu thuẫn đến Đổi mới</h2>
-        <p class="lead gsap-reveal">Giai đoạn 1976–1986 là minh chứng sống động cho quy luật khách quan và sự tác động của thể chế.</p>
+        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 2 · Cơ sở hạ tầng</span></span>
+        <h2 class="gsap-reveal">Khái niệm &amp; cấu trúc</h2>
+        <p class="lead gsap-reveal"><strong>Định nghĩa:</strong> Cơ sở hạ tầng là <strong>toàn bộ những quan hệ sản xuất</strong> của một xã hội trong sự vận động hiện thực của chúng, <strong>hợp thành cơ cấu kinh tế</strong> của xã hội đó.</p>
         <div class="card-grid">
           <div class="info-card gsap-reveal">
-            <h4 style="color: var(--accent);">Khủng hoảng (1976-86)</h4>
-            <p>Chủ quan ép QHSX vượt quá trình độ LLSX thực tế.</p>
+            <h4 style="color: var(--accent-gold);">QHSX thống trị</h4>
+            <p>Đặc trưng, <strong>quyết định bản chất</strong> CSHT của mỗi hình thái KTXH — chi phối toàn bộ (ví dụ: QHSX phong kiến trong xã hội phong kiến).</p>
           </div>
           <div class="info-card gsap-reveal">
-            <h4 style="color: var(--accent-gold);">Đổi mới (1986)</h4>
-            <p>Đổi mới tư duy (KTTT) mở đường cho kinh tế (CSHT).</p>
+            <h4 style="color: var(--accent2);">QHSX tàn dư</h4>
+            <p>QHSX của xã hội cũ còn sót lại, đang bị thay thế (vd: tàn dư chiếm hữu nô lệ trong xã hội phong kiến).</p>
+          </div>
+          <div class="info-card gsap-reveal">
+            <h4 style="color: var(--muted);">QHSX mầm mống</h4>
+            <p>QHSX mới đang xuất hiện — mầm mống HTKTXH tương lai (vd: mầm mống TBCN trong xã hội phong kiến).</p>
           </div>
         </div>
+        <p class="lead lead--after-list gsap-reveal">QHSX thống trị <strong>luôn chủ đạo</strong>, quy định xu hướng chung của đời sống kinh tế – xã hội.</p>
+        <p class="cite-footer gsap-reveal">Giáo trình (2021), tr. 137.</p>
       </div>
     </section>
 
-    <!-- 7 · Luồng 4 · 1/2 -->
-    <section class="slide slide--content" data-i="7">
+    <!-- 5 · KTTT định nghĩa -->
+    <section class="slide slide--content no-media" data-i="5">
       <div class="slide-main">
-        <span class="milestone gsap-reveal">Phần 4 · 1/2</span>
-        <h2 class="gsap-reveal">Thực tiễn hiện đại — Kiến tạo Thể chế</h2>
-        <p class="lead gsap-reveal">KTTT không "chạy sau" thụ động mà đang chủ động định hình quan hệ sản xuất mới.</p>
-        <ul class="points">
-          <li class="gsap-reveal"><strong>Luật Đất đai 2024:</strong> Thể chế hóa thị trường BĐS.</li>
-          <li class="gsap-reveal"><strong>NQ 57 (2024):</strong> Hành lang pháp lý cho Kinh tế số.</li>
-          <li class="gsap-reveal">Mục tiêu Kinh tế số chiếm ~30% GDP vào năm 2030.</li>
-        </ul>
+        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 3 · Kiến trúc thượng tầng</span></span>
+        <h2 class="gsap-reveal">Định nghĩa</h2>
+        <p class="lead gsap-reveal">Kiến trúc thượng tầng là <strong>toàn bộ</strong> những <strong>quan điểm, tư tưởng xã hội</strong> (hình thái ý thức xã hội) với những <strong>thiết chế xã hội tương ứng</strong>, cùng các <strong>quan hệ nội tại</strong> của thượng tầng, hình thành trên một <strong>cơ sở hạ tầng nhất định</strong>.</p>
+        <p class="lead lead--note gsap-reveal"><strong>Minh họa:</strong> có thể chèn ảnh sơ đồ CSHT — KTTT vào thư mục <code>assets/</code> và dùng khối <code>figure</code> ở phiên bản sau của slide này.</p>
+        <p class="cite-footer gsap-reveal">Giáo trình (2021), tr. 137.</p>
       </div>
     </section>
 
-    <!-- 8 · Luồng 4 · 2/2 -->
-    <section class="slide slide--content" data-i="8">
+    <!-- 6 · Cấu trúc KTTT -->
+    <section class="slide slide--content no-media" data-i="6">
       <div class="slide-main">
-        <span class="milestone gsap-reveal">Phần 4 · 2/2</span>
-        <h2 class="gsap-reveal">Thế hệ Gen Z — Vòng thực tiễn số</h2>
-        <p class="lead gsap-reveal">Gen Z là lực lượng lao động làm sống động mối quan hệ biện chứng trong nền kinh tế nền tảng.</p>
+        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 4 · Cấu trúc KTTT</span></span>
+        <h2 class="gsap-reveal">Hệ thống hình thái ý thức &amp; thiết chế</h2>
+        <div class="card-grid">
+          <div class="info-card gsap-reveal">
+            <h4 style="color: var(--accent2);">Ý thức xã hội</h4>
+            <p>Chính trị · Pháp luật · Triết học · Đạo đức · Tôn giáo (và các hình thái khác theo GT).</p>
+          </div>
+          <div class="info-card gsap-reveal">
+            <h4 style="color: var(--accent-gold);">Thiết chế tương ứng</h4>
+            <p>Nhà nước, đảng phái chính trị · Tòa án, VKS · Viện nghiên cứu triết học · Tập tục làng xã · Nhà thờ, chùa, giáo hội…</p>
+          </div>
+        </div>
         <ul class="points">
-          <li class="gsap-reveal"><strong>CSHT → KTTT:</strong> Công nghệ hình thành ý thức số.</li>
-          <li class="gsap-reveal"><strong>KTTT → CSHT:</strong> Tư duy tiêu dùng xanh đổi mới sản xuất.</li>
-          <li class="gsap-reveal">LO3 · LO5 · LO7: Vận dụng quy luật vào thực tiễn.</li>
+          <li class="gsap-reveal">Trong xã hội <strong>có giai cấp</strong>, KTTT mang <strong>tính giai cấp</strong> — phản ánh đấu tranh chính trị, tư tưởng giữa các giai cấp đối kháng.</li>
+          <li class="gsap-reveal">Ở xã hội hiện đại có giai cấp: <strong>chính trị, pháp luật</strong> và hệ thống thiết chế <strong>Đảng &amp; Nhà nước</strong> thường giữ vai trò <strong>quan trọng nhất</strong>.</li>
         </ul>
+        <p class="cite-footer gsap-reveal">Giáo trình (2021), tr. 137.</p>
       </div>
     </section>
 
-    <!-- 9 · Kết luận -->
+    <!-- 7 · Biện chứng 1 -->
+    <section class="slide slide--content no-media" data-i="7">
+      <div class="slide-main">
+        <span class="milestone gsap-reveal"><span class="milestone__text">Biện chứng (1/2)</span></span>
+        <h2 class="gsap-reveal">Thống nhất biện chứng — CSHT quyết định</h2>
+        <div class="card-grid card-grid--2x2">
+          <div class="info-card gsap-reveal">
+            <h4 style="color: var(--accent2);">Thống nhất biện chứng</h4>
+            <p>CSHT và KTTT thống nhất biện chứng: <strong>CSHT quyết định</strong> (xét đến cùng), KTTT <strong>tác động trở lại</strong> thường xuyên.</p>
+          </div>
+          <div class="info-card gsap-reveal">
+            <h4 style="color: var(--accent-gold);">Tương ứng &amp; tính chất</h4>
+            <p>Mỗi CSHT sinh ra KTTT <strong>tương ứng</strong>; <strong>tính chất</strong> KTTT do CSHT quy định (có / không đối kháng kinh tế ↔ có / không đối kháng trên các lĩnh vực KTTT).</p>
+          </div>
+          <div class="info-card gsap-reveal">
+            <h4 style="color: var(--accent);">Đối kháng &amp; thiết chế</h4>
+            <p><strong>Ví dụ:</strong> Xã hội cộng sản nguyên thủy — CSHT chưa có đối kháng lợi ích kinh tế rõ → KTTT chưa có Nhà nước, pháp luật như xã hội giai cấp. Khi có <strong>đối kháng lợi ích kinh tế</strong> → tất yếu cần Nhà nước, pháp luật… bảo vệ lợi ích giai cấp thống trị.</p>
+          </div>
+          <div class="info-card gsap-reveal">
+            <h4 style="color: rgba(94, 225, 208, 0.95);">Biến đổi &amp; tốc độ</h4>
+            <p><strong>Biến đổi CSHT</strong> dẫn tới biến đổi KTTT; tốc độ không đều (chính trị, pháp luật thường nhanh; nghệ thuật, tôn giáo thường chậm hơn; có yếu tố được kế thừa).</p>
+          </div>
+        </div>
+        <p class="cite-footer gsap-reveal">Giáo trình (2021), tr. 138–139.</p>
+      </div>
+    </section>
+
+    <!-- 8 · Biện chứng 2 -->
+    <section class="slide slide--content no-media" data-i="8">
+      <div class="slide-main">
+        <span class="milestone gsap-reveal"><span class="milestone__text">Biện chứng (2/2)</span></span>
+        <h2 class="gsap-reveal">Tác động trở lại của KTTT đối với CSHT</h2>
+        <p class="lead gsap-reveal">Theo GT: KTTT có <strong>độc lập tương đối</strong>; chức năng xã hội là <strong>duy trì, bảo vệ, củng cố</strong> CSHT đã sinh ra nó, đồng thời đấu tranh xóa bỏ CSHT — KTTT cũ.</p>
+        <ul class="points">
+          <li class="gsap-reveal"><strong>Ví dụ:</strong> QHSX vô sản thống trị ↔ cần thiết lập nhà nước vô sản bảo vệ sở hữu xã hội tập thể.</li>
+          <li class="gsap-reveal"><strong>Hai chiều:</strong> KTTT phù hợp quy luật kinh tế khách quan → <strong>thúc đẩy</strong> phát triển; ngược lại → <strong>kìm hãm</strong>.</li>
+          <li class="gsap-reveal"><strong>Ví dụ thực tiễn:</strong> Pháp luật đúng, nghiêm minh → ổn định đời sống, tạo điều kiện phát triển kinh tế — xã hội (và ngược lại).</li>
+        </ul>
+        <p class="cite-footer gsap-reveal">Giáo trình (2021), tr. 139–141.</p>
+      </div>
+    </section>
+
+    <!-- 9 · Dẫn chứng -->
     <section class="slide slide--content no-media" data-i="9">
       <div class="slide-main">
-        <span class="milestone gsap-reveal">Kết thúc</span>
-        <h2 class="gsap-reveal">Kết luận Biện chứng</h2>
-        <p class="lead gsap-reveal">Kinh tế là nền tảng, nhưng Chính trị/Tư tưởng không bao giờ là cái bóng thụ động.</p>
-        <p class="gsap-reveal" style="font-size: 1.1rem; color: var(--accent-gold); font-weight: 500;">Ở Việt Nam, Nhà nước đang chủ động kiến tạo thể chế để bắt kịp và dẫn dắt sự phát triển của lực lượng sản xuất.</p>
-        <p class="gsap-reveal" style="margin-top: 2rem; font-family: var(--font-serif); font-size: 1.5rem;">Trân trọng cảm ơn sự theo dõi.</p>
+        <span class="milestone gsap-reveal"><span class="milestone__text">Dẫn chứng</span></span>
+        <h2 class="gsap-reveal">Từ lý thuyết tới thực tiễn</h2>
+        <div class="card-stack-9">
+          <div class="card-row-2">
+            <div class="info-card gsap-reveal">
+              <h4 style="color: var(--accent2);">1. Nhân — quả</h4>
+              <p>CSHT là nền khách quan; KTTT phản ánh và tác động trở lại. Vd: khung <strong>Luật Đất đai 2024</strong> định hướng lại quan hệ sở hữu, phân phối.</p>
+            </div>
+            <div class="info-card gsap-reveal">
+              <h4 style="color: var(--accent);">2. Mâu thuẫn</h4>
+              <p>“Quán tính” KTTT có thể <strong>chậm so với</strong> biến đổi nhanh của CSHT (kinh tế số, hội nhập) → căng thẳng thể chế, đòi hỏi cải cách chính trị — pháp lý.</p>
+            </div>
+          </div>
+          <div class="info-card info-card--wide gsap-reveal">
+            <h4 style="color: var(--accent-gold);">Hai chiều &amp; kế thừa</h4>
+            <p><strong>Hai chiều:</strong> KTTT vừa thúc đẩy vừa có thể kìm hãm CSHT tùy mức phù hợp quy luật kinh tế khách quan. <strong>Kế thừa:</strong> KTTT không bị xóa sạch khi đổi CSHT — chọn lọc tinh thần pháp quyền, giá trị nhân văn cho thể chế mới.</p>
+          </div>
+        </div>
+        <p class="lead lead--after-list gsap-reveal"><strong>Gen Z &amp; kinh tế số:</strong> CSHT (hạ tầng số, thị trường lao động, nền tảng công nghệ) tạo điều kiện hình thành KTTT mới (tư duy đổi mới, khởi nghiệp); ngược lại, KTTT thúc đẩy đổi mới mô hình kinh doanh — cần đối chiếu thêm <strong>nguồn thống kê &amp; báo cáo chính thống</strong> khi trích dẫn số liệu.</p>
       </div>
     </section>
+
   </div>
 
   <div class="controls">
@@ -1490,35 +2010,28 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      // Initialize Lenis for smooth scroll
-      const lenis = new Lenis({
-        duration: 1.2,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        wheelMultiplier: 1,
-        touchMultiplier: 2,
-        infinite: false,
-      });
-
-      // Sync Lenis with ScrollTrigger
-      lenis.on('scroll', ScrollTrigger.update);
-
-      // Reset to top after layout calculation
-      setTimeout(() => {
-        window.scrollTo(0, 0);
-        lenis.scrollTo(0, { immediate: true });
-        ScrollTrigger.refresh();
-      }, 100);
-
-      function raf(time) {
-        lenis.raf(time);
-        requestAnimationFrame(raf);
-      }
-      requestAnimationFrame(raf);
-
-      // Register GSAP plugins
       gsap.registerPlugin(ScrollTrigger);
 
       const slides = gsap.utils.toArray(".slide");
+
+      function goToSlide(i, smooth = true) {
+        const clamped = Math.max(0, Math.min(i, slides.length - 1));
+        slides[clamped].scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "start" });
+      }
+
+      /** Slide đang chiếm phần lớn viewport (ổn định với scroll-snap & 100dvh) */
+      function getActiveSlideIndex() {
+        const anchor = window.scrollY + window.innerHeight * 0.25;
+        for (let j = slides.length - 1; j >= 0; j--) {
+          if (slides[j].offsetTop <= anchor + 1) return j;
+        }
+        return 0;
+      }
+
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        ScrollTrigger.refresh();
+      }, 100);
       const totalSlides = slides.length;
       const progressFill = document.getElementById("progress-fill");
       const currentSlideText = document.getElementById("current-slide");
@@ -1532,7 +2045,7 @@
         const dot = document.createElement("div");
         dot.className = `nav-dot ${i === 0 ? 'active' : ''}`;
         dot.addEventListener("click", () => {
-          lenis.scrollTo(slides[i]);
+          goToSlide(i);
         });
         navContainer.appendChild(dot);
       });
@@ -1612,16 +2125,21 @@
       const startBtn = document.querySelector('.btn-start');
       if (startBtn) {
         startBtn.addEventListener('click', () => {
-          lenis.scrollTo(slides[1]);
+          goToSlide(1);
         });
       }
 
-      // TOC Card Navigation
+      // TOC navigation (click + keyboard)
       document.querySelectorAll('.toc-node[data-target]').forEach(node => {
-        node.addEventListener('click', () => {
+        const go = () => {
           const targetIndex = node.getAttribute('data-target');
-          if (targetIndex !== null) {
-            lenis.scrollTo(slides[parseInt(targetIndex)]);
+          if (targetIndex !== null) goToSlide(parseInt(targetIndex, 10));
+        };
+        node.addEventListener('click', go);
+        node.addEventListener('keydown', e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            go();
           }
         });
       });
@@ -1633,15 +2151,13 @@
 
       if (btnPrev) {
         btnPrev.addEventListener('click', () => {
-          const activeSlideIndex = Math.round(window.scrollY / window.innerHeight);
-          lenis.scrollTo(slides[Math.max(activeSlideIndex - 1, 0)]);
+          goToSlide(getActiveSlideIndex() - 1);
         });
       }
 
       if (btnNext) {
         btnNext.addEventListener('click', () => {
-          const activeSlideIndex = Math.round(window.scrollY / window.innerHeight);
-          lenis.scrollTo(slides[Math.min(activeSlideIndex + 1, totalSlides - 1)]);
+          goToSlide(getActiveSlideIndex() + 1);
         });
       }
 
@@ -1659,13 +2175,13 @@
 
       // Keyboard Assist
       window.addEventListener("keydown", (e) => {
-        const activeSlideIndex = Math.round(window.scrollY / window.innerHeight);
+        const activeSlideIndex = getActiveSlideIndex();
         if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "PageDown") {
           e.preventDefault();
-          lenis.scrollTo(slides[Math.min(activeSlideIndex + 1, totalSlides - 1)]);
+          goToSlide(Math.min(activeSlideIndex + 1, totalSlides - 1));
         } else if (e.key === "ArrowUp" || e.key === "ArrowLeft" || e.key === "PageUp") {
           e.preventDefault();
-          lenis.scrollTo(slides[Math.max(activeSlideIndex - 1, 0)]);
+          goToSlide(Math.max(activeSlideIndex - 1, 0));
         }
       });
 

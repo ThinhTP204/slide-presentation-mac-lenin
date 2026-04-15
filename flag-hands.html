@@ -14,7 +14,6 @@
       --text: #e8ecf4;
       --muted: #9aa3b8;
       --accent: #da251d;
-      --gold: #ffcd00;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -42,6 +41,25 @@
       z-index: -1;
       transform: scaleX(-1);
       object-fit: cover;
+    }
+    #exit {
+      position: fixed;
+      right: 12px;
+      top: 12px;
+      z-index: 4;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--ui);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      backdrop-filter: blur(12px);
+    }
+    #exit:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
     }
     #ui {
       position: fixed;
@@ -87,12 +105,6 @@
       line-height: 1;
     }
     .hints li span:last-child { color: var(--text); opacity: 0.92; }
-    #status {
-      font-size: 12px;
-      color: var(--gold);
-      margin-top: 6px;
-      min-height: 1.4em;
-    }
     #btn {
       margin-top: 10px;
       padding: 10px 16px;
@@ -106,19 +118,12 @@
       box-shadow: 0 4px 20px rgba(218, 37, 29, 0.35);
     }
     #btn:disabled { opacity: 0.45; cursor: not-allowed; }
-    #back {
-      display: inline-block;
-      margin-top: 8px;
-      color: #7dd3fc;
-      text-decoration: none;
-      font-size: 12px;
-    }
-    #back:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
   <video id="webcam" playsinline muted aria-hidden="true"></video>
+  <a id="exit" href="index.html">Thoát</a>
   <div id="ui">
     <h1>Cờ VN — điều khiển bằng tay</h1>
     <ul class="hints" aria-label="Gợi ý cử chỉ">
@@ -128,8 +133,6 @@
       <li><span class="ic" aria-hidden="true">🫶</span><span><strong>Hai tay</strong> trong khung (cổ tay tách vừa) → tim + I LOVE VIET NAM</span></li>
     </ul>
     <button type="button" id="btn">Bật camera &amp; bắt đầu</button>
-    <div id="status"></div>
-    <a id="back" href="index.html">← Về slide chính</a>
   </div>
 
   <script type="module">
@@ -151,7 +154,6 @@
     const canvas = document.getElementById("canvas");
     const video = document.getElementById("webcam");
     const btn = document.getElementById("btn");
-    const statusEl = document.getElementById("status");
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -647,8 +649,9 @@
       const wb = b[0];
       const dw = dist2(wa, wb);
       const raised = wa.y < 0.62 && wb.y < 0.62;
-      if (raised) return dw > 0.004 && dw < 1.75;
-      return dw > 0.004 && dw < 1.55;
+      /* dw quá nhỏ: hai cổ tay trùng / model chỉ thấy một vùng — từ chối; quá lớn: không phải tư thế tim */
+      if (raised) return dw > 0.0015 && dw < 1.85;
+      return dw > 0.0015 && dw < 1.62;
     }
 
     function mirrorX(p) {
@@ -682,16 +685,16 @@
           baseOptions: { modelAssetPath: MODEL, delegate: "GPU" },
           runningMode: "VIDEO",
           numHands: 2,
-          minHandDetectionConfidence: 0.35,
-          minHandPresenceConfidence: 0.35,
+          minHandDetectionConfidence: 0.28,
+          minHandPresenceConfidence: 0.28,
         });
       } catch {
         handLandmarker = await HandLandmarker.createFromOptions(fs, {
           baseOptions: { modelAssetPath: MODEL, delegate: "CPU" },
           runningMode: "VIDEO",
           numHands: 2,
-          minHandDetectionConfidence: 0.35,
-          minHandPresenceConfidence: 0.35,
+          minHandDetectionConfidence: 0.28,
+          minHandPresenceConfidence: 0.28,
         });
       }
     }
@@ -708,7 +711,7 @@
 
     btn.addEventListener("click", async () => {
       btn.disabled = true;
-      statusEl.textContent = "Đang xin quyền camera…";
+      btn.textContent = "Đang xin quyền camera…";
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
@@ -717,10 +720,10 @@
         video.srcObject = stream;
         await video.play();
         await initMP();
-        statusEl.textContent = "Đã sẵn sàng — đưa tay vào khung hình.";
+        btn.textContent = "Camera đã bật";
       } catch (e) {
         console.error(e);
-        statusEl.textContent = "Không mở được camera (cần HTTPS hoặc localhost).";
+        btn.textContent = "Không mở camera — thử HTTPS / localhost";
         btn.disabled = false;
       }
     });
@@ -753,7 +756,6 @@
         }
       }
 
-      let label = "Không thấy tay";
       let wx = 0.5;
 
       const twoH = !!(lm && lm1 && twoHandsHeartSimple(lm, lm1));
@@ -761,7 +763,6 @@
         mode = "heart";
         gather = 0;
         heartLost = 0;
-        label = "🫶 Hai tay → tim";
       } else {
         if (mode === "heart") {
           heartLost++;
@@ -788,8 +789,7 @@
           if (gather >= 8) {
             mode = "flag";
             tgt.set(flagTgt);
-            label = "Nắm đấm → tụ cờ";
-          } else label = "Giữ nắm đấm…";
+          }
         } else {
           gather = Math.max(0, gather - 1);
         }
@@ -797,7 +797,6 @@
         if (open) {
           mode = "scatter";
           for (let i = 0; i < N * 3; i++) tgt[i] = pos[i];
-          label = "Mở tay → tản hạt + vòng 5 ảnh tổng kết";
         }
 
         if (swipe !== 0) {
@@ -807,7 +806,6 @@
             vel[i3 + 1] += (Math.random() - 0.5) * 0.06;
             vel[i3 + 2] += (Math.random() - 0.5) * 0.05;
           }
-          label = "Hất tay → xung lực";
         }
 
         if (lm && lm1 && (mode === "heart" || shapeMorph > 0.12)) {
@@ -817,16 +815,15 @@
         } else {
           hand3.set((lm[0].x - 0.5) * 5.5, -(lm[0].y - 0.5) * 4.2, 0.2);
         }
-      } else {
-        label = video.srcObject ? "Đưa tay vào khung hình" : "Chưa bật camera";
       }
 
       const formedNow = mode === "flag" || mode === "heart";
-      if (formedNow && twoH) shapeMorph = 1;
-      else {
-        shapeMorph += (0 - shapeMorph) * 0.16;
-        if (shapeMorph < 0.02) shapeMorph = 0;
-      }
+      /** Giữ blend tim khi đang mode heart — nếu chỉ dùng twoH, mất 1 frame là shapeMorph tụt về 0 → gần như không thấy tim */
+      const wantHeartBlend = twoH || mode === "heart";
+      const morphGoal = formedNow && wantHeartBlend ? 1 : 0;
+      shapeMorph += (morphGoal - shapeMorph) * 0.2;
+      if (shapeMorph < 0.012) shapeMorph = 0;
+      if (shapeMorph > 0.988) shapeMorph = 1;
 
       const wasFormed = lastAnimMode === "flag" || lastAnimMode === "heart";
       const isFormed = mode === "flag" || mode === "heart";
@@ -1072,12 +1069,6 @@
       }
 
       renderer.render(scene, camera);
-      if (video.srcObject) {
-        let s = `${label} · ${mode}`;
-        if (mode === "scatter") s += " · ✋ xoay tay để xoay vòng";
-        else if (mode === "heart") s += " · 🫶 che bớt một tay / tách tay → thoát tim";
-        statusEl.textContent = s;
-      }
 
       if (mode === "flag" || mode === "heart") {
         if (fh < 0.88) flagSmoothFrames++;
