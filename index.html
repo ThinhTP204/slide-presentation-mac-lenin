@@ -1261,6 +1261,57 @@
       color: #fff;
     }
 
+    /* Slide CQ10 — cùng layout slide--content; chỉ thêm watermark KHÔNG phía sau khối glass */
+    .slide.slide--content.slide--cq10 {
+      position: relative;
+    }
+
+    .slide.slide--content.slide--cq10 .slide--cq10-watermark {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 0;
+      pointer-events: none;
+      user-select: none;
+      font-family: var(--font-display), system-ui, sans-serif;
+      font-weight: 800;
+      font-size: clamp(4rem, 17vw, 11rem);
+      letter-spacing: -0.03em;
+      color: rgba(232, 238, 255, 0.055);
+      text-shadow: 0 0 100px rgba(94, 225, 208, 0.06);
+    }
+
+    .slide.slide--content.slide--cq10 .slide-main {
+      position: relative;
+      z-index: 1;
+    }
+
+    .slide.slide--content.slide--cq10 .card-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (max-width: 720px) {
+      .slide.slide--content.slide--cq10 .card-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .slide.slide--content.slide--cq10 .slide-main > h2 .slide--cq10-subline {
+      display: block;
+      margin-top: clamp(0.12rem, 0.7vh, 0.4rem);
+      font-size: clamp(1.55rem, 4.2vw, 2.75rem);
+      font-weight: 700;
+    }
+
+    .slide.slide--content.slide--cq10 .slide--cq10-khong {
+      color: var(--accent-gold);
+      text-shadow: 0 0 28px rgba(207, 181, 59, 0.35);
+      border-bottom: 2px solid rgba(218, 37, 29, 0.7);
+      padding: 0 0.06em;
+    }
+
     .slide-chapter {
       display: flex;
       flex-wrap: wrap;
@@ -2166,7 +2217,7 @@
   </div>
 
   <div class="slide-counter" id="slide-counter">
-    <span id="current-slide">01</span> / <span id="total-slides">11</span>
+    <span id="current-slide">01</span> / <span id="total-slides">12</span>
   </div>
 
   <div class="deck" id="deck">
@@ -2218,47 +2269,54 @@
             <li class="toc-node gsap-reveal" data-target="4" role="button" tabindex="0">
               <span class="toc-num" aria-hidden="true">04</span>
               <div class="toc-node-body">
-                <strong>Khái niệm cơ sở hạ tầng</strong>
-                <span class="toc-meta">Định nghĩa &amp; cấu trúc QHSX</span>
+                <strong>Lời giải CQ10</strong>
+                <span class="toc-meta">Kết luận — không độc quyền chính trị</span>
               </div>
             </li>
             <li class="toc-node gsap-reveal" data-target="5" role="button" tabindex="0">
               <span class="toc-num" aria-hidden="true">05</span>
               <div class="toc-node-body">
-                <strong>Khái niệm KTTT</strong>
-                <span class="toc-meta">Định nghĩa — gợi ý minh họa</span>
+                <strong>Khái niệm cơ sở hạ tầng</strong>
+                <span class="toc-meta">Định nghĩa &amp; cấu trúc QHSX</span>
               </div>
             </li>
             <li class="toc-node gsap-reveal" data-target="6" role="button" tabindex="0">
               <span class="toc-num" aria-hidden="true">06</span>
               <div class="toc-node-body">
-                <strong>Cấu trúc KTTT</strong>
-                <span class="toc-meta">Ý thức xã hội &amp; thiết chế</span>
+                <strong>Khái niệm KTTT</strong>
+                <span class="toc-meta">Định nghĩa — gợi ý minh họa</span>
               </div>
             </li>
             <li class="toc-node gsap-reveal" data-target="7" role="button" tabindex="0">
               <span class="toc-num" aria-hidden="true">07</span>
               <div class="toc-node-body">
-                <strong>Biện chứng CSHT — KTTT (1)</strong>
-                <span class="toc-meta">Vai trò quyết định của CSHT</span>
+                <strong>Cấu trúc KTTT</strong>
+                <span class="toc-meta">Ý thức xã hội &amp; thiết chế</span>
               </div>
             </li>
             <li class="toc-node gsap-reveal" data-target="8" role="button" tabindex="0">
               <span class="toc-num" aria-hidden="true">08</span>
               <div class="toc-node-body">
-                <strong>Biện chứng CSHT — KTTT (2)</strong>
-                <span class="toc-meta">Tác động trở lại &amp; độc lập tương đối</span>
+                <strong>Biện chứng CSHT — KTTT (1)</strong>
+                <span class="toc-meta">Vai trò quyết định của CSHT</span>
               </div>
             </li>
             <li class="toc-node gsap-reveal" data-target="9" role="button" tabindex="0">
               <span class="toc-num" aria-hidden="true">09</span>
               <div class="toc-node-body">
-                <strong>Dẫn chứng</strong>
-                <span class="toc-meta">Liên hệ lý thuyết — thực tiễn — Gen Z</span>
+                <strong>Biện chứng CSHT — KTTT (2)</strong>
+                <span class="toc-meta">Tác động trở lại &amp; độc lập tương đối</span>
               </div>
             </li>
             <li class="toc-node gsap-reveal" data-target="10" role="button" tabindex="0">
               <span class="toc-num" aria-hidden="true">10</span>
+              <div class="toc-node-body">
+                <strong>Dẫn chứng</strong>
+                <span class="toc-meta">Liên hệ lý thuyết — thực tiễn — Gen Z</span>
+              </div>
+            </li>
+            <li class="toc-node gsap-reveal" data-target="11" role="button" tabindex="0">
+              <span class="toc-num" aria-hidden="true">11</span>
               <div class="toc-node-body">
                 <strong>Tài liệu tham khảo</strong>
                 <span class="toc-meta">Nguồn trích dẫn (APA)</span>
@@ -2298,10 +2356,33 @@
       </div>
     </section>
 
-    <!-- 4 · CSHT -->
-    <section class="slide slide--content no-media" data-i="4">
+    <!-- 4 · Lời giải CQ10 -->
+    <section class="slide slide--content no-media slide--cq10" data-i="4" aria-labelledby="cq10-slide-title">
+      <div class="slide--cq10-watermark" aria-hidden="true">KHÔNG</div>
       <div class="slide-main">
-        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 2 · Cơ sở hạ tầng</span></span>
+        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 2 · Lời giải CQ10</span></span>
+        <h2 class="gsap-reveal" id="cq10-slide-title">
+          Lời Giải CQ10: Kẻ nắm kinh tế
+          <span class="slide--cq10-subline"><span class="slide--cq10-khong">KHÔNG</span> độc quyền chính trị</span>
+        </h2>
+        <div class="card-grid">
+          <div class="info-card gsap-reveal">
+            <h4 style="color: var(--accent2);">Sai lầm của ẩn dụ</h4>
+            <p>Cơ sở hạ tầng quyết định KTTT xét đến cùng, nhưng đó là <strong>quy luật khách quan</strong> của hệ thống, không phải sự phục tùng mệnh lệnh kiểu «bố mẹ — con cái».</p>
+          </div>
+          <div class="info-card gsap-reveal">
+            <h4 style="color: var(--accent-gold);">Quyền năng của KTTT</h4>
+            <p>Kiến trúc thượng tầng (đặc biệt là <strong>Nhà nước pháp quyền XHCN</strong>) có sức mạnh <strong>kiến tạo, định hướng</strong>, và <strong>phủ quyết</strong> những xu hướng kinh tế vị kỷ, tiêu cực.</p>
+          </div>
+        </div>
+        <p class="lead lead--note gsap-reveal"> Khẳng định sự lãnh đạo tiên phong của Đảng và Nhà nước trong việc điều tiết kinh tế thị trường, không để đồng tiền thao túng chính sách.</p>
+      </div>
+    </section>
+
+    <!-- 5 · CSHT -->
+    <section class="slide slide--content no-media" data-i="5">
+      <div class="slide-main">
+        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 3 · Cơ sở hạ tầng</span></span>
         <h2 class="gsap-reveal">Khái niệm &amp; cấu trúc</h2>
         <p class="lead gsap-reveal"><strong>Định nghĩa:</strong> Cơ sở hạ tầng là <strong>toàn bộ những quan hệ sản xuất</strong> của một xã hội trong sự vận động hiện thực của chúng, <strong>hợp thành cơ cấu kinh tế</strong> của xã hội đó.</p>
         <div class="card-grid">
@@ -2324,10 +2405,10 @@
       </div>
     </section>
 
-    <!-- 5 · KTTT định nghĩa -->
-    <section class="slide slide--content no-media" data-i="5">
+    <!-- 6 · KTTT định nghĩa -->
+    <section class="slide slide--content no-media" data-i="6">
       <div class="slide-main">
-        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 3 · Kiến trúc thượng tầng</span></span>
+        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 4 · Kiến trúc thượng tầng</span></span>
         <h2 class="gsap-reveal">Định nghĩa</h2>
         <p class="lead gsap-reveal">Kiến trúc thượng tầng là <strong>toàn bộ</strong> những <strong>quan điểm, tư tưởng xã hội</strong> (hình thái ý thức xã hội) với những <strong>thiết chế xã hội tương ứng</strong>, cùng các <strong>quan hệ nội tại</strong> của thượng tầng, hình thành trên một <strong>cơ sở hạ tầng nhất định</strong>.</p>
         <p class="cite-footer gsap-reveal">Giáo trình (2021), tr. 137.</p>
@@ -2335,10 +2416,10 @@
       </div>
     </section>
 
-    <!-- 6 · Cấu trúc KTTT -->
-    <section class="slide slide--content no-media" data-i="6">
+    <!-- 7 · Cấu trúc KTTT -->
+    <section class="slide slide--content no-media" data-i="7">
       <div class="slide-main">
-        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 4 · Cấu trúc KTTT</span></span>
+        <span class="milestone gsap-reveal"><span class="milestone__text">Trang 5 · Cấu trúc KTTT</span></span>
         <h2 class="gsap-reveal">Hệ thống hình thái ý thức &amp; thiết chế</h2>
         <div class="card-grid">
           <div class="info-card gsap-reveal">
@@ -2358,8 +2439,8 @@
       </div>
     </section>
 
-    <!-- 7 · Biện chứng 1 -->
-    <section class="slide slide--content no-media" data-i="7">
+    <!-- 8 · Biện chứng 1 -->
+    <section class="slide slide--content no-media" data-i="8">
       <div class="slide-main">
         <span class="milestone gsap-reveal"><span class="milestone__text">Biện chứng (1/2)</span></span>
         <h2 class="gsap-reveal">Thống nhất biện chứng — CSHT quyết định</h2>
@@ -2385,8 +2466,8 @@
       </div>
     </section>
 
-    <!-- 8 · Biện chứng 2 -->
-    <section class="slide slide--content no-media" data-i="8">
+    <!-- 9 · Biện chứng 2 -->
+    <section class="slide slide--content no-media" data-i="9">
       <div class="slide-main">
         <span class="milestone gsap-reveal"><span class="milestone__text">Biện chứng (2/2)</span></span>
         <h2 class="gsap-reveal">Tác động trở lại của KTTT đối với CSHT</h2>
@@ -2400,8 +2481,8 @@
       </div>
     </section>
 
-    <!-- 9 · Dẫn chứng -->
-    <section class="slide slide--content no-media" data-i="9">
+    <!-- 10 · Dẫn chứng -->
+    <section class="slide slide--content no-media" data-i="10">
       <div class="slide-main">
         <span class="milestone gsap-reveal"><span class="milestone__text">Dẫn chứng</span></span>
         <h2 class="gsap-reveal">Từ lý thuyết tới thực tiễn</h2>
@@ -2425,8 +2506,8 @@
       </div>
     </section>
 
-    <!-- 10 · Tài liệu tham khảo -->
-    <section class="slide slide--content no-media slide--refs" data-i="10">
+    <!-- 11 · Tài liệu tham khảo -->
+    <section class="slide slide--content no-media slide--refs" data-i="11">
       <div class="slide-main">
         <span class="milestone gsap-reveal"><span class="milestone__text">Phụ lục · Nguồn trích dẫn</span></span>
         <h2 class="gsap-reveal">Tài liệu tham khảo</h2>

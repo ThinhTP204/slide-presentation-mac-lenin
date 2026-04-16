@@ -161,7 +161,7 @@
     <h1>Cờ VN — điều khiển bằng tay</h1>
     <ul class="hints" aria-label="Gợi ý cử chỉ">
       <li><span class="ic" aria-hidden="true">✊</span><span>Tụ cờ — <strong>một tay</strong> nắm đấm (hai tay trong khung = tim)</span></li>
-      <li><span class="ic" aria-hidden="true">✋</span><span>Tản + <strong>4 card kết luận</strong> tóm tắt bài · xoay tay = xoay vòng</span></li>
+      <li><span class="ic" aria-hidden="true">✋</span><span>Tản + <strong>4 card một hàng</strong> · trỏ ngang → card nổi bật · <strong>OK 👌</strong> giữ → card đó phóng giữa màn, các card khác ẩn</span></li>
       <li><span class="ic" aria-hidden="true">↔</span><span>Hất ngang nhanh · xung hạt</span></li>
       <li><span class="ic" aria-hidden="true">🫶</span><span><strong>Hai tay</strong> trong khung (cổ tay tách vừa) → tim + THANKS FOR WATCHING</span></li>
     </ul>
@@ -545,51 +545,72 @@
     heartTitleSprite.visible = false;
     points.add(heartTitleSprite);
 
-    /** Vòng tóm tắt kết luận: chỉ 4 card chính (CSHT & KTTT) */
+    /** Một hàng 4 card tóm tắt kết luận (CSHT & KTTT) — chọn theo vị trí ngang tay */
     const SUMMARY_COUNT = 4;
-    const RING_R = 2.02;
+    const ROW_SPACING = 1.58;
+    const ROW_Z = -0.52;
+    const SUMMARY_ZOOM_POS = new THREE.Vector3(0, 0.07, 2.12);
+    const SUMMARY_ZOOM_SCALE = 3.05;
     const CARD_Y = 0.04;
-    const SUMMARY_CARD_W = 1.12;
-    const SUMMARY_CARD_H = 0.84;
+    const SUMMARY_CARD_W = 1.42;
+    const SUMMARY_CARD_H = 1.06;
 
-    const worldYAxis = new THREE.Vector3(0, 1, 0);
+    /** Song song mặt phẳng camera — chữ đọc đúng chiều (không mirror lookAt + rotateY). */
+    function orientSummaryCardFacingCamera(mesh) {
+      mesh.quaternion.copy(camera.quaternion);
+    }
 
-    /** Mặt chữ hướng ra ngoài (lật 180° quanh trục dọc sau lookAt). */
-    function orientSummaryCardToCenter(mesh) {
-      mesh.lookAt(0, CARD_Y, 0);
-      mesh.rotateOnWorldAxis(worldYAxis, Math.PI);
+    /**
+     * Cử chỉ OK: cái + trỏ tạo vòng, ba ngón kia duỗi.
+     * Lưu ý: lòng bàn hướng camera → trên ảnh 2D hai đầu ngón cái/trỏ tách xa hơn thực tế,
+     * nên dùng khoảng cách Euclidean (chuẩn hóa ~0–1) với ngưỡng rộng, không dùng dist² chặt.
+     */
+    function isOKPose(lm) {
+      if (!lm) return false;
+      const wrist = lm[0];
+      const pinchD = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
+      if (pinchD > 0.24 || pinchD < 0.008) return false;
+      /** Ba ngón duỗi: đầu ngón xa cổ tay hơn khớp gốc (MCP) — ổn định khi ngón chỉ lên */
+      const midExt = dist2(lm[12], wrist) > dist2(lm[9], wrist) * 0.88;
+      const ringExt = dist2(lm[16], wrist) > dist2(lm[13], wrist) * 0.88;
+      const pinkExt = dist2(lm[20], wrist) > dist2(lm[17], wrist) * 0.88;
+      const extCount = (midExt ? 1 : 0) + (ringExt ? 1 : 0) + (pinkExt ? 1 : 0);
+      if (extCount < 2) return false;
+      /** Tránh nắm đấm: ngón giữa không quá sát ngón cái */
+      if (dist2(lm[12], lm[4]) < 0.022) return false;
+      return true;
     }
     function makeSummaryCardTexture(title, subtitle, hue) {
       const c = document.createElement("canvas");
-      c.width = 512;
-      c.height = 384;
+      c.width = 640;
+      c.height = 480;
       const ctx = c.getContext("2d");
       const g = ctx.createLinearGradient(0, 0, 512, 384);
       g.addColorStop(0, `hsl(${hue}, 48%, 22%)`);
       g.addColorStop(1, `hsl(${hue + 18}, 52%, 12%)`);
       ctx.fillStyle = g;
-      ctx.fillRect(0, 0, 512, 384);
+      ctx.fillRect(0, 0, 640, 480);
       ctx.strokeStyle = "rgba(255, 205, 60, 0.45)";
-      ctx.lineWidth = 4;
-      ctx.strokeRect(14, 14, 484, 356);
+      ctx.lineWidth = 5;
+      ctx.strokeRect(16, 16, 608, 448);
       ctx.fillStyle = "#ffcd00";
-      ctx.font = "bold 34px Be Vietnam Pro, system-ui, sans-serif";
+      ctx.font = "bold 42px Be Vietnam Pro, system-ui, sans-serif";
       ctx.textAlign = "center";
-      ctx.fillText(title, 256, 150);
+      ctx.fillText(title, 320, 188);
       ctx.fillStyle = "#e8ecf4";
-      ctx.font = "22px system-ui, sans-serif";
+      ctx.font = "26px system-ui, sans-serif";
       const words = subtitle.split(" ");
       let line = "";
-      let y = 210;
+      let y = 258;
       for (const w of words) {
         const test = line + w + " ";
-        if (ctx.measureText(test).width > 420 && line) {
-          ctx.fillText(line, 256, y);
-          y += 30;
+        if (ctx.measureText(test).width > 520 && line) {
+          ctx.fillText(line, 320, y);
+          y += 34;
           line = w + " ";
         } else line = test;
       }
-      if (line) ctx.fillText(line.trim(), 256, y);
+      if (line) ctx.fillText(line.trim(), 320, y);
       const tex = new THREE.CanvasTexture(c);
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.needsUpdate = true;
@@ -614,9 +635,9 @@
         opacity: 0.94,
       });
       const mesh = new THREE.Mesh(new THREE.PlaneGeometry(SUMMARY_CARD_W, SUMMARY_CARD_H), mat);
-      const theta = (i / SUMMARY_COUNT) * Math.PI * 2;
-      mesh.position.set(RING_R * Math.cos(theta), CARD_Y, RING_R * Math.sin(theta));
-      orientSummaryCardToCenter(mesh);
+      const x = (i - (SUMMARY_COUNT - 1) / 2) * ROW_SPACING;
+      mesh.position.set(x, CARD_Y, ROW_Z);
+      orientSummaryCardFacingCamera(mesh);
       mesh.userData.restPos = mesh.position.clone();
       mesh.userData.idx = i;
       summaryRing.add(mesh);
@@ -627,17 +648,11 @@
     scene.add(summaryRing);
 
     let galleryNearIdx = 0;
-    /** Xoay vòng theo vị trí cổ tay (không tự quay theo thời gian) */
-    let wristRingSmoothX = 0;
-    let wristRingSmoothZ = 0;
-    let wristRingInit = false;
-    let indexXZSmoothX = 0;
-    let indexXZSmoothZ = 0;
-    let fingerAngleSmoothInit = false;
-    let galleryAngStable = 0;
-    /** Quán tính xoay vòng card khi mất tay ngắn hạn */
-    let ringYawVel = 0;
+    /** 0…1 dọc hàng card: bám vị trí ngang ngón trỏ / cổ tay (đã làm mịn) */
+    let rowSelSmooth = 0.5;
     let scatterHandLostFrames = 0;
+    /** 0 = hàng card; 1 = phóng card đang trỏ (cử chỉ OK) */
+    let summaryZoomT = 0;
 
     let gather = 0;
     /** float | flag | scatter | heart */
@@ -998,131 +1013,87 @@
       }
 
       summaryRing.visible = mode === "scatter";
+      summaryRing.rotation.set(0, 0, 0);
       if (mode === "scatter") {
+        const okPose = isOKPose(lm);
         if (lm) {
           scatterHandLostFrames = 0;
-          const wxT = (lm[0].x - 0.5) * 2.65;
-          const wzT = -(lm[0].y - 0.5) * 2.05;
-          const vertExt = Math.abs(lm[0].y - 0.5);
-          if (!wristRingInit) {
-            wristRingSmoothX = wxT;
-            wristRingSmoothZ = wzT;
-            wristRingInit = true;
-            const m0 = Math.hypot(wxT, wzT);
-            if (m0 > 0.025) summaryRing.rotation.y = Math.atan2(wxT, wzT);
-          } else {
-            const dx = wxT - wristRingSmoothX;
-            const dz = wzT - wristRingSmoothZ;
-            const wSpeed = Math.hypot(dx, dz);
-            /** Tay quét nhanh → bám tốc độ cao hơn, tránh vòng “đuổi” không kịp */
-            const wLerp = THREE.MathUtils.clamp(
-              vertExt > 0.14 ? 0.14 + wSpeed * 0.85 : 0.22 + wSpeed * 1.1,
-              0.14,
-              0.52
-            );
-            wristRingSmoothX += dx * wLerp;
-            wristRingSmoothZ += dz * wLerp;
-          }
-          const mag = Math.hypot(wristRingSmoothX, wristRingSmoothZ);
-          if (mag > 0.015) {
-            const targetYaw = Math.atan2(wristRingSmoothX, wristRingSmoothZ);
-            const cur = summaryRing.rotation.y;
-            let dYaw = targetYaw - cur;
-            while (dYaw > Math.PI) dYaw -= Math.PI * 2;
-            while (dYaw < -Math.PI) dYaw += Math.PI * 2;
-            const yawAlpha = THREE.MathUtils.clamp(0.38 + Math.abs(dYaw) * 0.95, 0.4, 0.92);
-            const step = dYaw * yawAlpha;
-            summaryRing.rotation.y += step;
-            ringYawVel = THREE.MathUtils.lerp(ringYawVel, step, 0.35);
-          }
+          summaryZoomT = THREE.MathUtils.clamp(summaryZoomT + (okPose ? 0.26 : -0.1), 0, 1);
+          const tipX = lm[8].x;
+          const wristX = lm[0].x;
+          const mix = THREE.MathUtils.clamp(tipX * 0.78 + wristX * 0.22, 0.03, 0.97);
+          /** Đảo 1−mix: landmark đã mirrorX — trỏ phía trái màn hình ≈ card trái (index nhỏ) */
+          const blended = 1 - mix;
+          const d = blended - rowSelSmooth;
+          const adapt = THREE.MathUtils.clamp(0.17 + Math.abs(d) * 1.35, 0.14, 0.48);
+          rowSelSmooth += d * adapt;
+          rowSelSmooth = THREE.MathUtils.clamp(rowSelSmooth, 0.02, 0.98);
+          galleryNearIdx = Math.min(
+            SUMMARY_COUNT - 1,
+            Math.max(0, Math.floor(rowSelSmooth * SUMMARY_COUNT - 1e-7))
+          );
         } else {
           scatterHandLostFrames++;
-          /** Mất tay vài frame: vòng trôi nhẹ theo quán tính, tránh “đứng hình” đột ngột */
-          summaryRing.rotation.y += ringYawVel;
-          ringYawVel *= 0.91;
-          if (scatterHandLostFrames > 45) {
-            fingerAngleSmoothInit = false;
-            ringYawVel *= 0.85;
+          summaryZoomT = Math.max(0, summaryZoomT - 0.12);
+          const bandCenter = (galleryNearIdx + 0.5) / SUMMARY_COUNT;
+          rowSelSmooth = THREE.MathUtils.lerp(rowSelSmooth, bandCenter, 0.055);
+          if (scatterHandLostFrames > 50) {
+            rowSelSmooth = THREE.MathUtils.lerp(rowSelSmooth, 0.5, 0.025);
           }
         }
 
-        let best = 0;
-        let bestDiff = 10;
-        if (lm) {
-          const ixT = (lm[8].x - 0.5) * 5.2;
-          const izT = -(lm[8].y - 0.5) * 4.0;
-          const vertExtF = Math.abs(lm[0].y - 0.5) + Math.abs(lm[8].y - 0.5) * 0.35;
-          const fx = ixT - indexXZSmoothX;
-          const fz = izT - indexXZSmoothZ;
-          const fSpeed = Math.hypot(fx, fz);
-          const lerpFinger = THREE.MathUtils.clamp(
-            vertExtF > 0.22 ? 0.12 + fSpeed * 0.55 : 0.2 + fSpeed * 0.75,
-            0.12,
-            0.55
-          );
-          if (!fingerAngleSmoothInit) {
-            indexXZSmoothX = ixT;
-            indexXZSmoothZ = izT;
-            fingerAngleSmoothInit = true;
-            const hi = Math.hypot(ixT, izT);
-            galleryAngStable = hi > 0.03 ? Math.atan2(ixT, izT) : summaryRing.rotation.y;
-          } else {
-            indexXZSmoothX += fx * lerpFinger;
-            indexXZSmoothZ += fz * lerpFinger;
-          }
-          const iMag = Math.hypot(indexXZSmoothX, indexXZSmoothZ);
-          if (iMag > 0.028) {
-            const raw = Math.atan2(indexXZSmoothX, indexXZSmoothZ);
-            let da = raw - galleryAngStable;
-            while (da > Math.PI) da -= Math.PI * 2;
-            while (da < -Math.PI) da += Math.PI * 2;
-            const fingerAlpha = THREE.MathUtils.clamp(0.48 + Math.abs(da) * 0.9, 0.48, 0.92);
-            galleryAngStable += da * fingerAlpha;
-          } else {
-            /** Ngón yếu / gần giữa: đồng bộ góc “mặt trước” với vòng cổ tay để card sau vẫn lật tới */
-            let sync = summaryRing.rotation.y - galleryAngStable;
-            while (sync > Math.PI) sync -= Math.PI * 2;
-            while (sync < -Math.PI) sync += Math.PI * 2;
-            galleryAngStable += sync * 0.14;
-          }
-          const angF = galleryAngStable;
-          for (let i = 0; i < SUMMARY_COUNT; i++) {
-            const th = (i / SUMMARY_COUNT) * Math.PI * 2 + summaryRing.rotation.y;
-            let d = angF - th;
-            while (d > Math.PI) d -= Math.PI * 2;
-            while (d < -Math.PI) d += Math.PI * 2;
-            const ad = Math.abs(d);
-            if (ad < bestDiff) {
-              bestDiff = ad;
-              best = i;
-            }
-          }
-          galleryNearIdx = best;
-        }
+        const zp = THREE.MathUtils.smootherstep(0, 1, summaryZoomT);
 
         for (let i = 0; i < SUMMARY_COUNT; i++) {
           const m = summaryMeshes[i];
           const mat = m.material;
+          const rest = m.userData.restPos;
 
-          if (lm && i === galleryNearIdx) {
-            mat.opacity = 1;
-            const s = 1.08 + Math.sin(t * 3.2) * 0.028;
-            m.scale.set(s, s, 1);
+          if (zp < 0.035) {
+            m.visible = true;
+            m.position.copy(rest);
+            orientSummaryCardFacingCamera(m);
+            if (lm && i === galleryNearIdx) {
+              mat.opacity = 1;
+              const s = 1.08 + Math.sin(t * 3.2) * 0.028;
+              m.scale.set(s, s, 1);
+            } else {
+              m.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+              mat.opacity = THREE.MathUtils.lerp(mat.opacity, 0.94, 0.1);
+            }
           } else {
-            m.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
-            mat.opacity = THREE.MathUtils.lerp(mat.opacity, 0.94, 0.1);
+            const isAct = i === galleryNearIdx;
+            const hideOthers = THREE.MathUtils.smootherstep(0.2, 0.75, zp);
+            if (isAct) {
+              m.visible = true;
+              m.position.lerpVectors(rest, SUMMARY_ZOOM_POS, zp);
+              const sc = 1 + (SUMMARY_ZOOM_SCALE - 1) * zp;
+              m.scale.set(sc, sc, 1);
+              orientSummaryCardFacingCamera(m);
+              mat.opacity = 1;
+            } else {
+              mat.opacity = THREE.MathUtils.lerp(0.94, 0, hideOthers);
+              m.scale.set(
+                THREE.MathUtils.lerp(1, 0.45, hideOthers),
+                THREE.MathUtils.lerp(1, 0.45, hideOthers),
+                1
+              );
+              m.position.copy(rest);
+              orientSummaryCardFacingCamera(m);
+              m.visible = hideOthers < 0.985;
+            }
           }
         }
       } else {
-        wristRingInit = false;
-        wristRingSmoothX *= 0.85;
-        wristRingSmoothZ *= 0.85;
-        fingerAngleSmoothInit = false;
         scatterHandLostFrames = 0;
-        ringYawVel = 0;
+        rowSelSmooth = 0.5;
+        galleryNearIdx = 0;
+        summaryZoomT = 0;
         for (const m of summaryMeshes) {
+          m.visible = true;
           m.quaternion.identity();
-          orientSummaryCardToCenter(m);
+          m.position.copy(m.userData.restPos);
+          orientSummaryCardFacingCamera(m);
           m.scale.set(1, 1, 1);
           m.material.opacity = 0.94;
         }
