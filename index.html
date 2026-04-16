@@ -1312,6 +1312,122 @@
       padding: 0 0.06em;
     }
 
+    /* Slide thăm dò — 3 nút + gợi ý theo lựa chọn */
+    .slide-poll__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem 0.85rem;
+      justify-content: center;
+      align-items: center;
+      margin: clamp(1rem, 2.2vh, 1.5rem) auto 0;
+      max-width: 42rem;
+    }
+
+    .slide-poll__btn {
+      flex: 1 1 auto;
+      min-width: 8.5rem;
+      padding: 0.7rem 1.2rem;
+      font-family: var(--font-vn);
+      font-size: clamp(0.86rem, 1.2vw, 0.98rem);
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      border-radius: 999px;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(16, 22, 40, 0.55);
+      color: rgba(240, 244, 255, 0.95);
+      transition: opacity 0.2s var(--ease), transform 0.2s var(--ease), border-color 0.2s var(--ease);
+    }
+
+    .slide-poll__btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      border-color: rgba(94, 225, 208, 0.45);
+    }
+
+    .slide-poll__btn--active {
+      box-shadow:
+        0 0 0 2px rgba(94, 225, 208, 0.35),
+        0 8px 28px rgba(0, 0, 0, 0.35);
+      border-color: rgba(127, 255, 240, 0.55) !important;
+    }
+
+    .slide-poll__btn--agree.slide-poll__btn--active {
+      box-shadow:
+        0 0 0 2px rgba(94, 225, 208, 0.4),
+        0 8px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    .slide-poll__btn--disagree.slide-poll__btn--active {
+      box-shadow:
+        0 0 0 2px rgba(218, 37, 29, 0.45),
+        0 8px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    .slide-poll__btn--neutral.slide-poll__btn--active {
+      box-shadow:
+        0 0 0 2px rgba(207, 181, 59, 0.45),
+        0 8px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    .slide-poll__btn--agree {
+      border-color: rgba(94, 225, 208, 0.55);
+      box-shadow: 0 0 0 1px rgba(94, 225, 208, 0.12);
+    }
+
+    .slide-poll__btn--disagree {
+      border-color: rgba(218, 37, 29, 0.55);
+      box-shadow: 0 0 0 1px rgba(218, 37, 29, 0.12);
+    }
+
+    .slide-poll__btn--neutral {
+      border-color: rgba(207, 181, 59, 0.5);
+      box-shadow: 0 0 0 1px rgba(207, 181, 59, 0.1);
+    }
+
+    .slide-poll__panel {
+      margin-top: clamp(1rem, 2vh, 1.35rem);
+      padding: clamp(1rem, 2vw, 1.35rem) clamp(1.1rem, 2.2vw, 1.5rem);
+      border-radius: var(--radius-card);
+      text-align: left;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(165deg, rgba(22, 30, 52, 0.75), rgba(10, 14, 26, 0.88));
+      box-shadow: var(--shadow-card), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .slide-poll__panel[hidden] {
+      display: none !important;
+    }
+
+    .slide-poll__hint {
+      font-size: clamp(0.72rem, 1vw, 0.82rem);
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(127, 255, 240, 0.85);
+      margin: 0 0 0.45rem;
+    }
+
+    .slide-poll__panel h3 {
+      font-family: var(--font-vn);
+      font-size: clamp(1.05rem, 1.8vw, 1.28rem);
+      font-weight: 700;
+      margin: 0 0 0.65rem;
+      color: #f4f7fb;
+    }
+
+    .slide-poll__panel ul {
+      margin: 0;
+      padding-left: 1.15rem;
+      font-family: var(--font-vn);
+      font-size: clamp(0.9rem, 1.35vw, 1.05rem);
+      line-height: 1.55;
+      color: rgba(218, 224, 240, 0.94);
+    }
+
+    .slide-poll__panel li + li {
+      margin-top: 0.45rem;
+    }
+
     .slide-chapter {
       display: flex;
       flex-wrap: wrap;
@@ -2217,7 +2333,7 @@
   </div>
 
   <div class="slide-counter" id="slide-counter">
-    <span id="current-slide">01</span> / <span id="total-slides">12</span>
+    <span id="current-slide">01</span> / <span id="total-slides">13</span>
   </div>
 
   <div class="deck" id="deck">
@@ -2317,6 +2433,13 @@
             </li>
             <li class="toc-node gsap-reveal" data-target="11" role="button" tabindex="0">
               <span class="toc-num" aria-hidden="true">11</span>
+              <div class="toc-node-body">
+                <strong>Câu hỏi thảo luận</strong>
+                <span class="toc-meta">Tiêu dùng xanh &amp; KTTT</span>
+              </div>
+            </li>
+            <li class="toc-node gsap-reveal" data-target="12" role="button" tabindex="0">
+              <span class="toc-num" aria-hidden="true">12</span>
               <div class="toc-node-body">
                 <strong>Tài liệu tham khảo</strong>
                 <span class="toc-meta">Nguồn trích dẫn (APA)</span>
@@ -2506,8 +2629,46 @@
       </div>
     </section>
 
-    <!-- 11 · Tài liệu tham khảo -->
-    <section class="slide slide--content no-media slide--refs" data-i="11">
+    <!-- 11 · Câu hỏi tiêu dùng xanh -->
+    <section class="slide slide--content no-media slide--poll" data-i="11" id="slide-poll-green">
+      <div class="slide-main">
+        <span class="milestone gsap-reveal"><span class="milestone__text">Thảo luận · Tiêu dùng xanh</span></span>
+        <h2 class="gsap-reveal">Câu hỏi mở rộng</h2>
+        <p class="question-block gsap-reveal"><strong>Xu hướng tiêu dùng xanh toàn cầu:</strong> Hiện nay, các hiệp định thương mại thế giới thường kèm theo các điều khoản về đạo đức và môi trường (KTTT). Nếu một doanh nghiệp Việt Nam nắm <strong>rất mạnh về kinh tế</strong> nhưng <strong>không tuân thủ</strong> các quy tắc đạo đức này, liệu họ có thể <strong>tồn tại bền vững</strong> không? Vì sao?</p>
+        <div class="slide-poll__actions gsap-reveal" role="group" aria-label="Chọn quan điểm — có thể đổi để xem gợi ý khác">
+          <button type="button" class="slide-poll__btn slide-poll__btn--agree" data-poll="agree" aria-pressed="false">Đồng ý</button>
+          <button type="button" class="slide-poll__btn slide-poll__btn--disagree" data-poll="disagree" aria-pressed="false">Không đồng ý</button>
+          <button type="button" class="slide-poll__btn slide-poll__btn--neutral" data-poll="neutral" aria-pressed="false">Trung lập</button>
+        </div>
+        <div class="slide-poll__panel gsap-reveal" data-poll-panel="agree" hidden>
+          <p class="slide-poll__hint">Gợi ý</p>
+          <h3>Sức mạnh vật chất</h3>
+          <ul>
+            <li><strong>Thị trường chưa đồng bộ:</strong> nhu cầu vẫn có thể bù đắp từ thị trường nội địa hoặc đối tác ít gắn điều kiện đạo đức — lợi thế kinh tế tạm thời che lấp áp lực KTTT.</li>
+            <li><strong>Chi phí vi phạm chưa đủ lớn:</strong> khi cơ chế thanh tra / trừng phạt còn lỏng, doanh nghiệp có thể “cầm cự” bằng hiệu quả giá — cần nhìn dài hạn.</li>
+          </ul>
+        </div>
+        <div class="slide-poll__panel gsap-reveal" data-poll-panel="disagree" hidden>
+          <p class="slide-poll__hint">Gợi ý</p>
+          <h3>Rào cản pháp lý</h3>
+          <ul>
+            <li><strong>Sức mạnh dư luận &amp; uy tín thương hiệu:</strong> vi phạm đạo đức — môi trường dễ bị tẩy chay, mất thị trường xuất khẩu dù vốn mạnh.</li>
+            <li><strong>Chuẩn pháp lý trong hiệp định:</strong> điều khoản KTTT gắn với thương mại → rủi ro kiện tụng, cấm vận, loại khỏi chuỗi cung ứng toàn cầu.</li>
+          </ul>
+        </div>
+        <div class="slide-poll__panel gsap-reveal" data-poll-panel="neutral" hidden>
+          <p class="slide-poll__hint">Gợi ý</p>
+          <h3>Sự thích nghi</h3>
+          <ul>
+            <li><strong>Tồn tại ngắn hạn:</strong> có thể sống nhờ lợi thế vật chất, nhưng khi chuẩn “xanh” trở thành <em>điều kiện tiên quyết</em> của thị trường thì phải chuyển đổi.</li>
+            <li><strong>Biện chứng CSHT — KTTT:</strong> nền kinh tế mạnh tạo điều kiện, nhưng KTTT (luật, dư luận, tiêu chuẩn) dần <strong>siết</strong> lối đi — bền vững cần cả hai chiều phù hợp.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12 · Tài liệu tham khảo -->
+    <section class="slide slide--content no-media slide--refs" data-i="12">
       <div class="slide-main">
         <span class="milestone gsap-reveal"><span class="milestone__text">Phụ lục · Nguồn trích dẫn</span></span>
         <h2 class="gsap-reveal">Tài liệu tham khảo</h2>
@@ -2901,6 +3062,26 @@
           ((typeof el.open === "boolean" && el.open) || el.hasAttribute("open"))
         );
       };
+
+      const pollSlide = document.getElementById("slide-poll-green");
+      if (pollSlide) {
+        pollSlide.querySelectorAll(".slide-poll__btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const key = btn.getAttribute("data-poll");
+            if (!key) return;
+            pollSlide.querySelectorAll(".slide-poll__btn").forEach((b) => {
+              const on = b === btn;
+              b.classList.toggle("slide-poll__btn--active", on);
+              b.setAttribute("aria-pressed", on ? "true" : "false");
+            });
+            pollSlide.querySelectorAll("[data-poll-panel]").forEach((p) => {
+              const show = p.getAttribute("data-poll-panel") === key;
+              if (show) p.removeAttribute("hidden");
+              else p.setAttribute("hidden", "");
+            });
+          });
+        });
+      }
 
       // Keyboard Assist
       window.addEventListener("keydown", (e) => {
