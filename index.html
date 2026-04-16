@@ -304,6 +304,209 @@
       display: block;
     }
 
+    /* Trợ lý trình chiếu — chỉ trả lời trong phạm vi Chủ đề #03 */
+    .deck-chat {
+      position: fixed;
+      right: max(1rem, env(safe-area-inset-right, 0px));
+      bottom: max(4.5rem, calc(env(safe-area-inset-bottom, 0px) + 3.25rem));
+      z-index: 1002;
+      font-family: var(--font-vn);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.65rem;
+      pointer-events: none;
+    }
+
+    .deck-chat > * {
+      pointer-events: auto;
+    }
+
+    .deck-chat__fab {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid rgba(207, 181, 59, 0.42);
+      background: linear-gradient(145deg, rgba(36, 22, 18, 0.95) 0%, rgba(12, 10, 8, 0.98) 100%);
+      color: var(--accent-gold);
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 1.35rem;
+      line-height: 1;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 10px 32px rgba(0, 0, 0, 0.5),
+        0 0 20px rgba(207, 181, 59, 0.12);
+      transition: transform 0.25s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+    }
+
+    .deck-chat__fab:hover {
+      transform: scale(1.06);
+      border-color: rgba(232, 197, 71, 0.65);
+      box-shadow:
+        0 0 0 1px rgba(207, 181, 59, 0.15),
+        0 14px 40px rgba(0, 0, 0, 0.55),
+        0 0 28px rgba(207, 181, 59, 0.22);
+    }
+
+    .deck-chat__fab[aria-expanded="true"] {
+      border-color: rgba(94, 225, 208, 0.55);
+      color: var(--accent2);
+    }
+
+    .deck-chat__panel {
+      width: min(22rem, calc(100vw - 2rem));
+      max-height: min(70vh, 28rem);
+      display: flex;
+      flex-direction: column;
+      border-radius: var(--radius-card);
+      background: var(--surface-elevated);
+      border: 1px solid var(--surface-border-strong);
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+
+    .deck-chat__panel[hidden] {
+      display: none !important;
+    }
+
+    .deck-chat__head {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .deck-chat__title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.02em;
+      margin: 0;
+    }
+
+    .deck-chat__subtitle {
+      margin: 0.2rem 0 0;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .deck-chat__close {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--surface-border);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.1rem;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+
+    .deck-chat__close:hover {
+      color: var(--text);
+      border-color: rgba(94, 225, 208, 0.35);
+      background: rgba(94, 225, 208, 0.08);
+    }
+
+    .deck-chat__messages {
+      flex: 1;
+      min-height: 10rem;
+      overflow-y: auto;
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+      font-size: 0.82rem;
+      line-height: 1.55;
+    }
+
+    .deck-chat__bubble {
+      padding: 0.55rem 0.75rem;
+      border-radius: 12px;
+      max-width: 100%;
+      word-wrap: break-word;
+    }
+
+    .deck-chat__bubble--bot {
+      align-self: flex-start;
+      background: rgba(94, 225, 208, 0.08);
+      border: 1px solid rgba(94, 225, 208, 0.18);
+      color: var(--text);
+    }
+
+    .deck-chat__bubble--bot.deck-chat__bubble--refute {
+      border-color: rgba(232, 90, 90, 0.35);
+      background: rgba(232, 90, 90, 0.08);
+    }
+
+    .deck-chat__bubble--user {
+      align-self: flex-end;
+      background: rgba(189, 30, 30, 0.2);
+      border: 1px solid rgba(189, 30, 30, 0.35);
+      color: var(--text);
+    }
+
+    .deck-chat__form {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.65rem 0.75rem;
+      border-top: 1px solid var(--surface-border);
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .deck-chat__input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      padding: 0.5rem 0.65rem;
+      font: inherit;
+      font-size: 0.82rem;
+      background: rgba(8, 10, 16, 0.9);
+      color: var(--text);
+    }
+
+    .deck-chat__input:focus {
+      outline: none;
+      border-color: rgba(94, 225, 208, 0.45);
+      box-shadow: 0 0 0 2px rgba(94, 225, 208, 0.12);
+    }
+
+    .deck-chat__send {
+      flex-shrink: 0;
+      padding: 0.5rem 0.85rem;
+      border-radius: 10px;
+      border: 1px solid rgba(94, 225, 208, 0.35);
+      background: rgba(94, 225, 208, 0.12);
+      color: var(--accent2);
+      font-weight: 600;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .deck-chat__send:hover {
+      background: rgba(94, 225, 208, 0.22);
+      border-color: rgba(94, 225, 208, 0.55);
+    }
+
+    @media (max-width: 520px) {
+      .deck-chat__panel {
+        width: calc(100vw - 1.5rem);
+        max-height: min(65vh, 26rem);
+      }
+    }
+
     .sr-only {
       position: absolute;
       width: 1px;
@@ -2328,6 +2531,25 @@
     </div>
   </dialog>
 
+  <div class="deck-chat" id="deck-chat" aria-label="Trợ lý nội dung trình chiếu">
+    <div class="deck-chat__panel" id="deck-chat-panel" hidden>
+      <div class="deck-chat__head">
+        <div>
+          <p class="deck-chat__title">Trợ lý Chủ đề #03</p>
+          <p class="deck-chat__subtitle">Chỉ trả lời theo các slide CSHT &amp; KTTT (Giáo trình 2021, tr. 137–141). Câu hỏi ngoài phạm vi sẽ được từ chối lịch sự.</p>
+        </div>
+        <button type="button" class="deck-chat__close" id="deck-chat-close" aria-label="Đóng trợ lý">&times;</button>
+      </div>
+      <div class="deck-chat__messages" id="deck-chat-messages" role="log" aria-live="polite" aria-relevant="additions"></div>
+      <form class="deck-chat__form" id="deck-chat-form">
+        <label for="deck-chat-input" class="sr-only">Câu hỏi của bạn</label>
+        <input type="text" class="deck-chat__input" id="deck-chat-input" name="q" autocomplete="off" maxlength="400" placeholder="Hỏi về CSHT, KTTT, CQ10, tiêu dùng xanh…" />
+        <button type="submit" class="deck-chat__send">Gửi</button>
+      </form>
+    </div>
+    <button type="button" class="deck-chat__fab" id="deck-chat-toggle" aria-expanded="false" aria-controls="deck-chat-panel" title="Mở trợ lý Chủ đề #03">💬</button>
+  </div>
+
   <div class="slide-nav" id="slide-nav">
     <!-- Will be populated by JS -->
   </div>
@@ -3083,8 +3305,250 @@
         });
       }
 
+      /* —— Trợ lý trình chiếu (chỉ phạm vi nội dung slide) —— */
+      (function initDeckChat() {
+        const root = document.getElementById("deck-chat");
+        const panel = document.getElementById("deck-chat-panel");
+        const toggle = document.getElementById("deck-chat-toggle");
+        const closeBtn = document.getElementById("deck-chat-close");
+        const form = document.getElementById("deck-chat-form");
+        const input = document.getElementById("deck-chat-input");
+        const messages = document.getElementById("deck-chat-messages");
+        if (!root || !panel || !toggle || !form || !input || !messages) return;
+
+        const fold = (s) =>
+          String(s || "")
+            .normalize("NFD")
+            .replace(/\p{M}/gu, "")
+            .toLowerCase()
+            .replace(/đ/g, "d")
+            .trim();
+
+        const hasAny = (f, arr) => arr.some((k) => k && f.includes(fold(k)));
+
+        const OFF_TOPIC = [
+          "xem phim",
+          "phim hay",
+          "bong da",
+          "world cup",
+          "nau an",
+          "cong thuc mon",
+          "bitcoin",
+          "chung khoan",
+          "hen ho",
+          "choi game",
+          "game online",
+          "hoc python",
+          "javascript la",
+          "thoi tiet hom nay",
+          "du bao mua",
+          "hack facebook",
+          "crack phan mem"
+        ];
+
+        const GREETING = ["chao", "xin chao", "hello", "hi ", "hey", "help", "giup minh", "gioi thieu"];
+
+        const TOPICS = [
+          {
+            keys: ["cq10", "loi giai cq", "khong doc quyen", "an du", "bo me", "con cai"],
+            text:
+              "Slide CQ10 phản bác ẩn dụ «bố mẹ — con cái»: CSHT quyết định KTTT là quy luật khách quan của hệ thống, không phải mệnh lệnh cá nhân. KTTT (đặc biệt Nhà nước pháp quyền XHCN) có sức mạnh kiến tạo, định hướng và phủ quyết xu hướng kinh tế tiêu cực — kẻ mạnh về kinh tế không độc quyền chính trị theo nghĩa giản đơn."
+          },
+          {
+            keys: ["tieu dung xanh", "hiep dinh thuong mai", "doanh nghiep", "ben vung", "dao duc moi truong", "thao luan 11"],
+            text:
+              "Slide thảo luận: hiệp định thương mại gắn điều khoản đạo đức — môi trường (KTTT). Câu hỏi: DN Việt rất mạnh kinh tế nhưng không tuân quy tắc đạo đức đó có bền vững không? Ba hướng gợi ý (Đồng ý / Không / Trung lập) trên slide so sánh sức mạnh vật chất, rào cản pháp lý — uy tín, và tồn tại ngắn hạn vs chuẩn «xanh» dài hạn — biện chứng hai chiều CSHT — KTTT."
+          },
+          {
+            keys: ["tai lieu tham khao", "apa", "trich dan", "nguon slide 12", "luat dat dai 2024", "nghi quyet 57", "bao cao kinh te so", "gen z", "tong cuc thong ke", "youtube", "v97efkwpggo"],
+            text:
+              "Slide tài liệu tham khảo liệt kê APA: Luật Đất đai 2024; Nghị quyết 57-NQ/TW; Báo cáo kinh tế số 2024 (Bộ TT&amp;TT); nghiên cứu Gen Z (Zhang &amp; Liu, 2023); thông cáo TCTK; Giáo trình TH Mác–Lênin (2021) tr. 137–141; video minh họa YouTube. Dùng đúng nguồn khi trích dẫn ngoài lớp."
+          },
+          {
+            keys: ["luat dat dai", "2024", "dat dai"],
+            text:
+              "Slide dẫn chứng: Luật Đất đai 2024 là ví nhân — quả — KTTT (khung pháp lý) định hướng lại quan hệ sở hữu, phân phối trên nền CSHT."
+          },
+          {
+            keys: ["gen z", "kinh te so", "hach tang so", "khoi nghiep"],
+            text:
+              "Slide dẫn chứng nêu Gen Z &amp; kinh tế số: CSHT (hạ tầng số, thị trường lao động, nền tảng công nghệ) tạo điều kiện KTTT mới (tư duy đổi mới, khởi nghiệp); KTTT thúc đổi mới mô hình kinh doanh. Khi trích số liệu cần nguồn thống kê &amp; báo cáo chính thống."
+          },
+          {
+            keys: ["boi canh", "cau hoi mo dau", "nguyen ly 1", "nguyen ly 2", "quan he vat chat", "tinh tat yeu"],
+            text:
+              "Slide bối cảnh đặt câu hỏi về quyền kinh tế và chính trị — tư tưởng, rồi tiếp cận quy luật biện chứng CSHT — KTTT (không quy giản ẩn dụ gia đình). Hai nguyên lý: quan hệ vật chất quyết định quan hệ tinh thần; tính tất yếu kinh tế (xét đến cùng) quyết định tính tất yếu chính trị — xã hội."
+          },
+          {
+            keys: ["nhan dinh", "bo sung toan dien", "giai cap thong tri", "thu dong", "tac dong tro lai"],
+            text:
+              "Slide tóm tắt: trong xã hội có đối kháng giai cấp, giai cấp thống trị kinh tế cũng thống trị chính trị — tinh thần. Mọi hiện tượng KTTT xét đến cùng phụ thuộc và do CSHT quyết định. Song KTTT không thụ động: có độc lập tương đối và tác động trở lại CSHT kinh tế."
+          },
+          {
+            keys: ["dinh nghia csht", "quan he san xuat", "qhsx", "thong tri", "tan du", "mam mong", "co cau kinh te"],
+            text:
+              "CSHT là toàn bộ quan hệ sản xuất trong vận động hiện thực, hợp thành cơ cấu kinh tế xã hội. Ba tầng QHSX: thống trị (đặc trưng, quyết định bản chất), tàn dư (xã hội cũ còn sót), mầm mống (HTKTXH tương lai). QHSX thống trị luôn chủ đạo. (Giáo trình 2021, tr. 137.)"
+          },
+          {
+            keys: ["dinh nghia kttt", "kien truc thuong tang la", "y thuc xa hoi", "thiet che tuong ung"],
+            text:
+              "KTTT là toàn bộ quan điểm — tư tưởng xã hội (hình thái ý thức) với thiết chế tương ứng, quan hệ nội tại của thượng tầng, trên một CSHT nhất định. (Tr. 137.)"
+          },
+          {
+            keys: ["cau truc kttt", "chinh tri phap luat", "nha nuoc", "dang va nha", "dang voi nha", "tinh giai cap"],
+            text:
+              "Cấu trúc KTTT: ý thức xã hội (chính trị, pháp luật, triết học, đạo đức, tôn giáo…) và thiết chế (Nhà nước, đảng phái, tòa án, viện triết học, tập tục, tôn giáo…). Trong xã hội có giai cấp, KTTT mang tính giai cấp. Chính trị — pháp luật và Đảng &amp; Nhà nước thường quan trọng nhất ở xã hội hiện đại có giai cấp."
+          },
+          {
+            keys: ["bien chung 1", "thong nhat bien chung", "tuong ung", "doi khang kinh te", "bien doi csht", "toc do"],
+            text:
+              "Biện chứng (1): CSHT và KTTT thống nhất biện chứng — CSHT quyết định xét đến cùng, KTTT tác động trở lại. Mỗi CSHT sinh KTTT tương ứng; tính chất KTTT do CSHT quy định (đối kháng kinh tế ↔ đối kháng trên KTTT). Ví dụ cộng sản nguyên thủy chưa cần Nhà nước — pháp luật như xã hội giai cấp. Biến đổi CSHT kéo theo biến đổi KTTT; tốc độ không đều giữa các lĩnh vực. (Tr. 138–139.)"
+          },
+          {
+            keys: ["bien chung 2", "doc lap tuong doi", "duy tri bao ve", "phap luat dung", "nghiem minh", "kim ham", "thuc day"],
+            text:
+              "Biện chứng (2): KTTT có độc lập tương đối; chức năng duy trì — bảo vệ — củng cố CSHT đã sinh ra nó và đấu tranh xóa bỏ CSHT — KTTT cũ. KTTT phù hợp quy luật kinh tế khách quan thì thúc đẩy, ngược lại kìm hãm. Ví dụ pháp luật đúng, nghiêm minh → ổn định và điều kiện phát triển. (Tr. 139–141.)"
+          },
+          {
+            keys: ["dan chung", "ly thuyet thuc tien", "mau thuan", "quan tinh", "hai chieu", "ke thua"],
+            text:
+              "Slide dẫn chứng: nhân — quả; mâu thuẫn «quán tính» KTTT chậm hơn biến đổi nhanh CSHT (kinh tế số, hội nhập); hai chiều thúc đẩy — kìm hãm; kế thừa tinh thần pháp quyền và giá trị nhân văn khi đổi CSHT."
+          },
+          {
+            keys: ["muc luc", "toc slide", "nhay slide", "chu de 03", "nhom 4", "cac slide", "noi dung slide"],
+            text:
+              "Đây là bài Nhóm 4 — Triết học Mác–Lênin, Chủ đề #03 về biện chứng cơ sở hạ tầng và kiến trúc thượng tầng theo Giáo trình 2021 (tr. 137–141). Mục lục slide nằm ở trang phụ lục; có thể hỏi cụ thể từng phần: định nghĩa, cấu trúc, hai mặt biện chứng, CQ10, thảo luận tiêu dùng xanh, hoặc tài liệu tham khảo."
+          }
+        ];
+
+        const REFUTE =
+          "Mình <strong>không trả lời</strong> phần đó: trợ lý này chỉ được «neo» vào nội dung các slide của Chủ đề #03 (CSHT &amp; KTTT, CQ10, dẫn chứng Luật Đất đai / kinh tế số / Gen Z, thảo luận tiêu dùng xanh, tài liệu APA). Câu bạn hỏi nằm <strong>ngoài rìa</strong> phạm vi bài — mình không thể xác nhận hay bịa thêm. Hãy đổi câu hỏi liên quan trực tiếp các khái niệm và ví dụ trên slide.";
+
+        const WELCOME =
+          "Chào bạn. Mình là trợ lý cho bộ trình chiếu <strong>Chủ đề #03 — CSHT &amp; KTTT</strong>. Hỏi ngắn gọn về định nghĩa, quy luật biện chứng, lời giải CQ10, dẫn chứng thực tiễn hoặc câu thảo luận tiêu dùng xanh — mình sẽ tóm lại đúng theo slide. Câu không liên quan bài mình sẽ từ chối.";
+
+        const EMPTY_HINT = "Bạn gõ câu hỏi (ví dụ: «KTTT tác động trở lại CSHT thế nào?») rồi bấm Gửi.";
+
+        const GENERIC =
+          "Theo các slide hiện có: <strong>CSHT</strong> (quan hệ sản xuất, cơ cấu kinh tế) quyết định <strong>KTTT</strong> (ý thức xã hội + thiết chế) xét đến cùng, nhưng KTTT có độc lập tương đối và tác động mạnh trở lại. Bạn muốn đào sâu phần nào — định nghĩa, cấu trúc QHSX, biện chứng hai chiều, CQ10, hay dẫn chứng Luật Đất đai / Gen Z?";
+
+        function setOpen(open) {
+          panel.hidden = !open;
+          toggle.setAttribute("aria-expanded", open ? "true" : "false");
+          if (open) {
+            window.setTimeout(() => input.focus(), 80);
+          }
+        }
+
+        toggle.addEventListener("click", () => setOpen(panel.hidden));
+        closeBtn.addEventListener("click", () => setOpen(false));
+
+        function bubble(html, role, refute) {
+          const el = document.createElement("div");
+          el.className =
+            "deck-chat__bubble deck-chat__bubble--" + role + (refute ? " deck-chat__bubble--refute" : "");
+          el.innerHTML = html;
+          messages.appendChild(el);
+          messages.scrollTop = messages.scrollHeight;
+        }
+
+        function replyForQuery(raw) {
+          const q = String(raw || "").trim();
+          if (!q) return { html: EMPTY_HINT, refute: false };
+
+          const f = fold(q);
+          if (f.length < 2) return { html: EMPTY_HINT, refute: false };
+
+          if (hasAny(f, GREETING) && f.length < 40) {
+            return { html: WELCOME, refute: false };
+          }
+
+          const offHits = OFF_TOPIC.filter((k) => f.includes(k)).length;
+          let best = null;
+          let bestScore = 0;
+          for (const t of TOPICS) {
+            let s = 0;
+            for (const k of t.keys) {
+              const fk = fold(k);
+              if (fk.length >= 2 && f.includes(fk)) s += fk.length >= 8 ? 2 : 1;
+            }
+            if (s > bestScore) {
+              bestScore = s;
+              best = t;
+            }
+          }
+
+          if (bestScore === 0) {
+            if (hasAny(f, GREETING) && f.length < 48) return { html: WELCOME, refute: false };
+            if (offHits >= 1) return { html: REFUTE, refute: true };
+            const vague = maybeGenericOnTopic(f);
+            if (vague) return vague;
+            return { html: REFUTE, refute: true };
+          }
+
+          if (offHits >= 1 && bestScore < 2) {
+            return { html: REFUTE, refute: true };
+          }
+          return { html: best.text, refute: false };
+        }
+
+        function maybeGenericOnTopic(f) {
+          const courseHints = [
+            "csht",
+            "kttt",
+            "mac lenin",
+            "mac-",
+            "trie hoc",
+            "bien chung",
+            "giai cap",
+            "nha nuoc",
+            "phap luat",
+            "ha tang",
+            "thuong tang",
+            "quan he san xuat",
+            "xa hoi",
+            "co so ha tang",
+            "kien truc thuong tang",
+            "tom tat",
+            "noi dung bai",
+            "chu de 3",
+            "chu de #03",
+            "thuyet trinh"
+          ];
+          if (courseHints.some((h) => f.includes(h))) {
+            return { html: GENERIC, refute: false };
+          }
+          return null;
+        }
+
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const text = input.value.trim();
+          if (!text) return;
+          bubble(text.replace(/</g, "&lt;"), "user", false);
+          input.value = "";
+          const out = replyForQuery(text);
+          window.setTimeout(() => bubble(out.html, "bot", out.refute), 120);
+        });
+
+        window.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && !panel.hidden) {
+            setOpen(false);
+            toggle.focus();
+          }
+        });
+
+        bubble(WELCOME, "bot", false);
+      })();
+
       // Keyboard Assist
       window.addEventListener("keydown", (e) => {
+        if (document.activeElement && document.activeElement.closest("#deck-chat")) {
+          if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "ArrowLeft" || e.key === "ArrowRight") {
+            e.stopPropagation();
+          }
+          return;
+        }
         if (
           isModalDialogOpen("ai-usage-dialog") ||
           isModalDialogOpen("infra-chart-dialog") ||
