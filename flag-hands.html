@@ -118,19 +118,52 @@
       box-shadow: 0 4px 20px rgba(218, 37, 29, 0.35);
     }
     #btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Khung xem camera — góc phải dưới (cùng stream với video ẩn cho MediaPipe) */
+    .camera-preview-wrap {
+      position: fixed;
+      right: max(12px, env(safe-area-inset-right, 0px));
+      bottom: max(12px, env(safe-area-inset-bottom, 0px));
+      z-index: 2;
+      width: min(280px, 42vw);
+      aspect-ratio: 4 / 3;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55);
+      background: #0a0c12;
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.28s ease, transform 0.28s ease;
+    }
+    .camera-preview-wrap.is-on {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    .camera-preview-wrap__video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+    }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
   <video id="webcam" playsinline muted aria-hidden="true"></video>
+  <div id="camera-preview-wrap" class="camera-preview-wrap" aria-hidden="true">
+    <video id="webcam-preview" class="camera-preview-wrap__video" playsinline muted tabindex="-1"></video>
+  </div>
   <a id="exit" href="index.html">Thoát</a>
   <div id="ui">
     <h1>Cờ VN — điều khiển bằng tay</h1>
     <ul class="hints" aria-label="Gợi ý cử chỉ">
       <li><span class="ic" aria-hidden="true">✊</span><span>Tụ cờ — <strong>một tay</strong> nắm đấm (hai tay trong khung = tim)</span></li>
-      <li><span class="ic" aria-hidden="true">✋</span><span>Tản + vòng ảnh · xoay tay = xoay vòng</span></li>
+      <li><span class="ic" aria-hidden="true">✋</span><span>Tản + <strong>4 card kết luận</strong> tóm tắt bài · xoay tay = xoay vòng</span></li>
       <li><span class="ic" aria-hidden="true">↔</span><span>Hất ngang nhanh · xung hạt</span></li>
-      <li><span class="ic" aria-hidden="true">🫶</span><span><strong>Hai tay</strong> trong khung (cổ tay tách vừa) → tim + I LOVE VIET NAM</span></li>
+      <li><span class="ic" aria-hidden="true">🫶</span><span><strong>Hai tay</strong> trong khung (cổ tay tách vừa) → tim + THANKS FOR WATCHING</span></li>
     </ul>
     <button type="button" id="btn">Bật camera &amp; bắt đầu</button>
   </div>
@@ -153,6 +186,8 @@
 
     const canvas = document.getElementById("canvas");
     const video = document.getElementById("webcam");
+    const videoPreview = document.getElementById("webcam-preview");
+    const previewWrap = document.getElementById("camera-preview-wrap");
     const btn = document.getElementById("btn");
 
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
@@ -362,16 +397,18 @@
     geom.setAttribute("color", new THREE.BufferAttribute(col, 3));
 
     function createSoftParticleTexture() {
-      const sz = 128;
+      const sz = 256;
       const cv = document.createElement("canvas");
       cv.width = sz;
       cv.height = sz;
       const g = cv.getContext("2d");
       const cx = sz / 2;
-      const rg = g.createRadialGradient(cx, cx, 0, cx, cx, sz * 0.5);
+      const rg = g.createRadialGradient(cx, cx, 0, cx, cx, sz * 0.52);
       rg.addColorStop(0, "rgba(255,255,255,1)");
-      rg.addColorStop(0.18, "rgba(255,255,255,0.72)");
-      rg.addColorStop(0.45, "rgba(255,248,240,0.22)");
+      rg.addColorStop(0.12, "rgba(255,255,255,0.92)");
+      rg.addColorStop(0.28, "rgba(255,245,220,0.55)");
+      rg.addColorStop(0.52, "rgba(255,220,180,0.22)");
+      rg.addColorStop(0.78, "rgba(255,200,120,0.08)");
       rg.addColorStop(1, "rgba(255,255,255,0)");
       g.fillStyle = rg;
       g.fillRect(0, 0, sz, sz);
@@ -382,7 +419,7 @@
 
     const particleMap = createSoftParticleTexture();
     const mat = new THREE.PointsMaterial({
-      size: 0.09,
+      size: 0.12,
       map: particleMap,
       vertexColors: true,
       transparent: true,
@@ -463,7 +500,7 @@
       const ctx = c.getContext("2d");
       const cx = cw / 2;
       const cy = ch / 2;
-      const text = "I LOVE VIET NAM";
+      const text = "THANKS FOR WATCHING";
       ctx.font = '800 108px "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif';
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -508,8 +545,9 @@
     heartTitleSprite.visible = false;
     points.add(heartTitleSprite);
 
-    const SUMMARY_COUNT = 5;
-    const RING_R = 2.05;
+    /** Vòng tóm tắt kết luận: chỉ 4 card chính (CSHT & KTTT) */
+    const SUMMARY_COUNT = 4;
+    const RING_R = 2.02;
     const CARD_Y = 0.04;
     const SUMMARY_CARD_W = 1.12;
     const SUMMARY_CARD_H = 0.84;
@@ -559,11 +597,10 @@
     }
 
     const summaryPairs = [
-      ["Đặt vấn đề", "Câu hỏi · ẩn dụ"],
-      ["CSHT · KTTT", "Giáo trình 2021"],
-      ["Lịch sử VN", "Trước & sau 1986"],
-      ["Thực tiễn", "Luật đất · NQ 57"],
-      ["Kết luận", "Biện chứng"],
+      ["Nhận định cốt lõi", "GT 2021 · kinh tế quyết định chính trị tinh thần"],
+      ["Cơ sở hạ tầng", "QHSX · thống trị · tàn dư · mầm mống"],
+      ["Kiến trúc thượng tầng", "Ý thức xã hội · thiết chế · tính giai cấp"],
+      ["Kết luận học phần", "Biện chứng · tác động trở lại · thực tiễn"],
     ];
 
     const summaryRing = new THREE.Group();
@@ -598,6 +635,9 @@
     let indexXZSmoothZ = 0;
     let fingerAngleSmoothInit = false;
     let galleryAngStable = 0;
+    /** Quán tính xoay vòng card khi mất tay ngắn hạn */
+    let ringYawVel = 0;
+    let scatterHandLostFrames = 0;
 
     let gather = 0;
     /** float | flag | scatter | heart */
@@ -606,6 +646,8 @@
     let lastSwipe = 0;
     let heartLost = 0;
     let flagSmoothFrames = 0;
+    /** 0→1 sau khi vào cờ/tim: kéo hạt tăng dần, tránh giật một frame */
+    let formedGatherEase = 0;
     /** 0 = hình cờ, 1 = hình tim — nội suy liên tục, tránh nhảy giữa hai layout */
     let shapeMorph = 0;
     const wristHist = [];
@@ -718,7 +760,10 @@
           audio: false,
         });
         video.srcObject = stream;
+        videoPreview.srcObject = stream;
         await video.play();
+        await videoPreview.play();
+        previewWrap.classList.add("is-on");
         await initMP();
         btn.textContent = "Camera đã bật";
       } catch (e) {
@@ -827,31 +872,30 @@
 
       const wasFormed = lastAnimMode === "flag" || lastAnimMode === "heart";
       const isFormed = mode === "flag" || mode === "heart";
-      const snapA = 0.48;
+
+      if (isFormed) {
+        formedGatherEase = Math.min(1, formedGatherEase + 0.048);
+      } else {
+        formedGatherEase = 0;
+      }
+
+      /** Không snap vị trí 48% một frame (gây nhảy) — chỉ giảm vận tốc rồi hội tụ dần bằng pull ramp */
       if (isFormed && !wasFormed) {
-        const b = shapeMorph;
-        for (let i = 0; i < N; i++) {
-          const i3 = i * 3;
-          const bx = flagTgt[i3] * (1 - b) + heartTgt[i3] * b;
-          const by = flagTgt[i3 + 1] * (1 - b) + heartTgt[i3 + 1] * b;
-          const bz = flagTgt[i3 + 2] * (1 - b) + heartTgt[i3 + 2] * b;
-          pos[i3] = pos[i3] * (1 - snapA) + bx * snapA;
-          pos[i3 + 1] = pos[i3 + 1] * (1 - snapA) + by * snapA;
-          pos[i3 + 2] = pos[i3 + 2] * (1 - snapA) + bz * snapA;
-        }
-        for (let i = 0; i < N * 3; i++) vel[i] *= 0.012;
+        for (let i = 0; i < N * 3; i++) vel[i] *= 0.48;
         flagSmoothFrames = 0;
       }
 
       const fh = shapeMorph;
-      const flagPullPart = 0.054 + 0.048 * Math.exp(-flagSmoothFrames * 0.2);
+      const flagPullPart = 0.04 + 0.036 * Math.exp(-flagSmoothFrames * 0.16);
+      const gatherRamp =
+        0.26 + 0.74 * THREE.MathUtils.smootherstep(0, 1, formedGatherEase);
       const pull =
         mode === "flag" || mode === "heart"
-          ? flagPullPart * (1 - fh) + 0.062 * fh
+          ? (flagPullPart * (1 - fh) + 0.056 * fh) * gatherRamp
           : mode === "scatter"
             ? 0.012
             : 0.028;
-      const damp = mode === "flag" || mode === "heart" ? 0.954 : 0.94;
+      const damp = mode === "flag" || mode === "heart" ? 0.963 : 0.94;
 
       for (let i = 0; i < N; i++) {
         const i3 = i * 3;
@@ -921,8 +965,8 @@
           col[i3 + 2] = Math.min(1, cB * tw);
         } else if (mode === "flag" || mode === "heart") {
           const gl =
-            (1.1 + 0.09 * Math.sin(t * 2.2 + i * 0.009)) * (1 - fh) +
-            (1.08 + 0.1 * Math.sin(t * 2.45 + i * 0.011)) * fh;
+            (1.22 + 0.14 * Math.sin(t * 2.2 + i * 0.009)) * (1 - fh) +
+            (1.2 + 0.12 * Math.sin(t * 2.45 + i * 0.011)) * fh;
           col[i3] = Math.min(1, cR * gl);
           col[i3 + 1] = Math.min(1, cG * gl);
           col[i3 + 2] = Math.min(1, cB * gl);
@@ -939,11 +983,11 @@
 
       const wantPtSize =
         mode === "flag" || mode === "heart"
-          ? 0.108 * (1 - fh) + 0.122 * fh
+          ? 0.148 * (1 - fh) + 0.168 * fh
           : mode === "scatter"
-            ? 0.078
-            : 0.07;
-      mat.size = THREE.MathUtils.lerp(mat.size, wantPtSize, 0.07);
+            ? 0.095
+            : 0.088;
+      mat.size = THREE.MathUtils.lerp(mat.size, wantPtSize, 0.08);
 
       if (mode === "flag" || mode === "heart") {
         points.rotation.x = 0;
@@ -956,28 +1000,49 @@
       summaryRing.visible = mode === "scatter";
       if (mode === "scatter") {
         if (lm) {
+          scatterHandLostFrames = 0;
           const wxT = (lm[0].x - 0.5) * 2.65;
           const wzT = -(lm[0].y - 0.5) * 2.05;
           const vertExt = Math.abs(lm[0].y - 0.5);
-          const wLerp = vertExt > 0.14 ? 0.07 : 0.14;
           if (!wristRingInit) {
             wristRingSmoothX = wxT;
             wristRingSmoothZ = wzT;
             wristRingInit = true;
             const m0 = Math.hypot(wxT, wzT);
-            if (m0 > 0.04) summaryRing.rotation.y = Math.atan2(wxT, wzT);
+            if (m0 > 0.025) summaryRing.rotation.y = Math.atan2(wxT, wzT);
           } else {
-            wristRingSmoothX += (wxT - wristRingSmoothX) * wLerp;
-            wristRingSmoothZ += (wzT - wristRingSmoothZ) * wLerp;
+            const dx = wxT - wristRingSmoothX;
+            const dz = wzT - wristRingSmoothZ;
+            const wSpeed = Math.hypot(dx, dz);
+            /** Tay quét nhanh → bám tốc độ cao hơn, tránh vòng “đuổi” không kịp */
+            const wLerp = THREE.MathUtils.clamp(
+              vertExt > 0.14 ? 0.14 + wSpeed * 0.85 : 0.22 + wSpeed * 1.1,
+              0.14,
+              0.52
+            );
+            wristRingSmoothX += dx * wLerp;
+            wristRingSmoothZ += dz * wLerp;
           }
           const mag = Math.hypot(wristRingSmoothX, wristRingSmoothZ);
-          if (mag > 0.038) {
+          if (mag > 0.015) {
             const targetYaw = Math.atan2(wristRingSmoothX, wristRingSmoothZ);
             const cur = summaryRing.rotation.y;
             let dYaw = targetYaw - cur;
             while (dYaw > Math.PI) dYaw -= Math.PI * 2;
             while (dYaw < -Math.PI) dYaw += Math.PI * 2;
-            summaryRing.rotation.y += dYaw * 0.36;
+            const yawAlpha = THREE.MathUtils.clamp(0.38 + Math.abs(dYaw) * 0.95, 0.4, 0.92);
+            const step = dYaw * yawAlpha;
+            summaryRing.rotation.y += step;
+            ringYawVel = THREE.MathUtils.lerp(ringYawVel, step, 0.35);
+          }
+        } else {
+          scatterHandLostFrames++;
+          /** Mất tay vài frame: vòng trôi nhẹ theo quán tính, tránh “đứng hình” đột ngột */
+          summaryRing.rotation.y += ringYawVel;
+          ringYawVel *= 0.91;
+          if (scatterHandLostFrames > 45) {
+            fingerAngleSmoothInit = false;
+            ringYawVel *= 0.85;
           }
         }
 
@@ -987,24 +1052,38 @@
           const ixT = (lm[8].x - 0.5) * 5.2;
           const izT = -(lm[8].y - 0.5) * 4.0;
           const vertExtF = Math.abs(lm[0].y - 0.5) + Math.abs(lm[8].y - 0.5) * 0.35;
-          const lerpFinger = vertExtF > 0.22 ? 0.055 : vertExtF > 0.14 ? 0.09 : 0.16;
+          const fx = ixT - indexXZSmoothX;
+          const fz = izT - indexXZSmoothZ;
+          const fSpeed = Math.hypot(fx, fz);
+          const lerpFinger = THREE.MathUtils.clamp(
+            vertExtF > 0.22 ? 0.12 + fSpeed * 0.55 : 0.2 + fSpeed * 0.75,
+            0.12,
+            0.55
+          );
           if (!fingerAngleSmoothInit) {
             indexXZSmoothX = ixT;
             indexXZSmoothZ = izT;
             fingerAngleSmoothInit = true;
             const hi = Math.hypot(ixT, izT);
-            galleryAngStable = hi > 0.045 ? Math.atan2(ixT, izT) : summaryRing.rotation.y;
+            galleryAngStable = hi > 0.03 ? Math.atan2(ixT, izT) : summaryRing.rotation.y;
           } else {
-            indexXZSmoothX += (ixT - indexXZSmoothX) * lerpFinger;
-            indexXZSmoothZ += (izT - indexXZSmoothZ) * lerpFinger;
+            indexXZSmoothX += fx * lerpFinger;
+            indexXZSmoothZ += fz * lerpFinger;
           }
           const iMag = Math.hypot(indexXZSmoothX, indexXZSmoothZ);
-          if (iMag > 0.048) {
+          if (iMag > 0.028) {
             const raw = Math.atan2(indexXZSmoothX, indexXZSmoothZ);
             let da = raw - galleryAngStable;
             while (da > Math.PI) da -= Math.PI * 2;
             while (da < -Math.PI) da += Math.PI * 2;
-            galleryAngStable += da * 0.42;
+            const fingerAlpha = THREE.MathUtils.clamp(0.48 + Math.abs(da) * 0.9, 0.48, 0.92);
+            galleryAngStable += da * fingerAlpha;
+          } else {
+            /** Ngón yếu / gần giữa: đồng bộ góc “mặt trước” với vòng cổ tay để card sau vẫn lật tới */
+            let sync = summaryRing.rotation.y - galleryAngStable;
+            while (sync > Math.PI) sync -= Math.PI * 2;
+            while (sync < -Math.PI) sync += Math.PI * 2;
+            galleryAngStable += sync * 0.14;
           }
           const angF = galleryAngStable;
           for (let i = 0; i < SUMMARY_COUNT; i++) {
@@ -1019,8 +1098,6 @@
             }
           }
           galleryNearIdx = best;
-        } else {
-          fingerAngleSmoothInit = false;
         }
 
         for (let i = 0; i < SUMMARY_COUNT; i++) {
@@ -1041,6 +1118,8 @@
         wristRingSmoothX *= 0.85;
         wristRingSmoothZ *= 0.85;
         fingerAngleSmoothInit = false;
+        scatterHandLostFrames = 0;
+        ringYawVel = 0;
         for (const m of summaryMeshes) {
           m.quaternion.identity();
           orientSummaryCardToCenter(m);

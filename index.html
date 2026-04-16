@@ -260,6 +260,288 @@
       border: 0;
     }
 
+    /* Nút AI — tròn, góc trái phía trên, mở dialog khai báo usage */
+    .fab-ai-usage {
+      position: fixed;
+      top: max(5.25rem, calc(env(safe-area-inset-top, 0px) + 4.5rem));
+      left: max(1rem, env(safe-area-inset-left, 0px));
+      z-index: 1003;
+      width: 52px;
+      height: 52px;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #eaf8ff;
+      background: linear-gradient(145deg, #1a3a52 0%, #0d2238 45%, #152a44 100%);
+      border: 2px solid rgba(94, 225, 208, 0.45);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.06),
+        0 8px 28px rgba(0, 0, 0, 0.45),
+        0 0 24px rgba(94, 225, 208, 0.18);
+      transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), border-color 0.25s var(--ease);
+    }
+
+    .fab-ai-usage:hover {
+      transform: scale(1.08);
+      border-color: rgba(127, 255, 240, 0.65);
+      box-shadow:
+        0 0 0 1px rgba(94, 225, 208, 0.2),
+        0 12px 36px rgba(0, 0, 0, 0.5),
+        0 0 32px rgba(94, 225, 208, 0.28);
+    }
+
+    .fab-ai-usage:active {
+      transform: scale(0.97);
+    }
+
+    .fab-ai-usage svg {
+      width: 26px;
+      height: 26px;
+      display: block;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @keyframes ai-dialog-in {
+      from {
+        opacity: 0;
+        transform: scale(0.92) translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @keyframes ai-dialog-out {
+      from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+      to {
+        opacity: 0;
+        transform: scale(0.92) translateY(12px);
+      }
+    }
+
+    @keyframes ai-backdrop-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes ai-backdrop-out {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    .ai-usage-dialog {
+      max-width: min(42rem, calc(100vw - 2rem));
+      width: 100%;
+      margin: auto;
+      padding: 0;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(165deg, rgba(22, 28, 44, 0.98), rgba(10, 12, 22, 0.98));
+      color: var(--text);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    .ai-usage-dialog[open] {
+      animation: ai-dialog-in 0.34s var(--ease) both;
+    }
+
+    .ai-usage-dialog[open]::backdrop {
+      background: rgba(2, 4, 10, 0.72);
+      backdrop-filter: blur(6px);
+      animation: ai-backdrop-in 0.3s ease both;
+    }
+
+    .ai-usage-dialog[open].ai-usage-dialog--closing {
+      animation: ai-dialog-out 0.28s var(--ease) forwards;
+    }
+
+    .ai-usage-dialog[open].ai-usage-dialog--closing::backdrop {
+      animation: ai-backdrop-out 0.26s ease forwards;
+    }
+
+    .ai-usage-dialog__inner {
+      position: relative;
+      padding: clamp(1.25rem, 3vw, 1.75rem);
+      max-height: min(78vh, 640px);
+      overflow-y: auto;
+    }
+
+    .ai-usage-dialog__close {
+      position: absolute;
+      top: 0.65rem;
+      right: 0.65rem;
+      width: 2.25rem;
+      height: 2.25rem;
+      border: none;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 1.35rem;
+      line-height: 1;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      transition: background 0.2s;
+    }
+
+    .ai-usage-dialog__close:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    .ai-usage-dialog h2 {
+      font-family: var(--font-vn);
+      font-size: clamp(1.15rem, 2.2vw, 1.35rem);
+      font-weight: 700;
+      margin: 0 2.5rem 0.85rem 0;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid rgba(94, 225, 208, 0.25);
+      color: #f4f7fb;
+    }
+
+    .ai-usage-dialog__lead {
+      font-size: clamp(0.92rem, 1.35vw, 1.02rem);
+      line-height: 1.55;
+      color: rgba(200, 208, 228, 0.95);
+      margin: 0 0 1.1rem;
+    }
+
+    .ai-usage-dialog__list {
+      margin: 0 0 1.15rem;
+      padding: 0 0 0 1.15rem;
+      font-size: clamp(0.9rem, 1.3vw, 1rem);
+      line-height: 1.55;
+      color: rgba(218, 224, 240, 0.96);
+    }
+
+    .ai-usage-dialog__list li {
+      margin-bottom: 0.75rem;
+    }
+
+    .ai-usage-dialog__list strong {
+      color: var(--accent2);
+      font-weight: 700;
+    }
+
+    .ai-usage-dialog__foot {
+      font-size: clamp(0.86rem, 1.2vw, 0.95rem);
+      line-height: 1.5;
+      color: rgba(160, 170, 195, 0.95);
+      margin: 0;
+      padding-top: 0.85rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Nút trong slide — mở dialog minh họa */
+    .btn-slide-secondary {
+      align-self: center;
+      margin-top: 0.35rem;
+      padding: 0.65rem 1.35rem;
+      font-family: var(--font-vn);
+      font-size: clamp(0.88rem, 1.2vw, 0.98rem);
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      color: rgba(232, 238, 255, 0.96);
+      background: rgba(94, 225, 208, 0.1);
+      border: 1px solid rgba(94, 225, 208, 0.42);
+      border-radius: 12px;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
+      transition: background 0.22s var(--ease), border-color 0.22s var(--ease), transform 0.2s var(--ease);
+    }
+
+    .btn-slide-secondary:hover {
+      background: rgba(94, 225, 208, 0.18);
+      border-color: rgba(127, 255, 240, 0.55);
+      transform: translateY(-1px);
+    }
+
+    .btn-slide-secondary:active {
+      transform: translateY(0);
+    }
+
+    /* Dialog — sơ đồ ba tầng CSHT (ảnh lớn, cuộn được) */
+    .infra-chart-dialog {
+      max-width: min(97vw, 80rem);
+      width: 100%;
+      margin: auto;
+      padding: 0;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(165deg, rgba(22, 28, 44, 0.98), rgba(10, 12, 22, 0.98));
+      color: var(--text);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    .infra-chart-dialog[open] {
+      animation: ai-dialog-in 0.34s var(--ease) both;
+    }
+
+    .infra-chart-dialog[open]::backdrop {
+      background: rgba(2, 4, 10, 0.72);
+      backdrop-filter: blur(6px);
+      animation: ai-backdrop-in 0.3s ease both;
+    }
+
+    .infra-chart-dialog[open].infra-chart-dialog--closing {
+      animation: ai-dialog-out 0.28s var(--ease) forwards;
+    }
+
+    .infra-chart-dialog[open].infra-chart-dialog--closing::backdrop {
+      animation: ai-backdrop-out 0.26s ease forwards;
+    }
+
+    .infra-chart-dialog__inner {
+      position: relative;
+      padding: clamp(1.1rem, 2.5vw, 1.5rem);
+      padding-top: clamp(2.5rem, 4vw, 2.85rem);
+      max-height: min(95vh, 1240px);
+      overflow: auto;
+    }
+
+    .infra-chart-dialog h2 {
+      font-family: var(--font-vn);
+      font-size: clamp(1rem, 1.9vw, 1.2rem);
+      font-weight: 700;
+      margin: 0 2.5rem 0.75rem 0;
+      padding-bottom: 0.55rem;
+      border-bottom: 1px solid rgba(94, 225, 208, 0.22);
+      color: #f4f7fb;
+      line-height: 1.35;
+    }
+
+    .infra-chart-dialog__figure {
+      margin: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.25);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    .infra-chart-dialog__img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
     /* —— Content Slides —— */
     .slide--content {
       display: grid;
@@ -894,6 +1176,89 @@
     .apa-list li {
       padding: 0.45rem 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Slide bảng nguồn trích dẫn (APA) */
+    .slide--refs.slide--content.no-media .slide-main {
+      max-width: min(96vw, 72rem);
+    }
+
+    .slide--refs.slide--content .slide-main > h2 {
+      font-size: clamp(1.85rem, 4.2vw, 3rem);
+    }
+
+    .refs-table-wrap {
+      width: 100%;
+      margin-top: clamp(0.35rem, 1.2vh, 0.75rem);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(6, 10, 22, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .refs-table {
+      width: 100%;
+      min-width: 36rem;
+      border-collapse: collapse;
+      font-family: var(--font-vn);
+      font-size: clamp(0.72rem, 1.05vw, 0.9rem);
+      line-height: 1.45;
+      color: rgba(218, 224, 240, 0.95);
+    }
+
+    .refs-table thead th {
+      text-align: left;
+      padding: 0.65rem 0.75rem;
+      font-weight: 700;
+      font-size: 0.92em;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: rgba(207, 181, 59, 0.95);
+      background: rgba(22, 28, 48, 0.9);
+      border-bottom: 1px solid rgba(207, 181, 59, 0.28);
+      white-space: nowrap;
+    }
+
+    .refs-table tbody td {
+      padding: 0.65rem 0.75rem;
+      vertical-align: top;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      word-break: break-word;
+    }
+
+    .refs-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .refs-table tbody tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .refs-table .col-stt {
+      width: 2.75rem;
+      text-align: center;
+      font-weight: 700;
+      color: rgba(94, 225, 208, 0.95);
+      white-space: nowrap;
+    }
+
+    .refs-table .col-source {
+      width: 22%;
+      min-width: 9rem;
+      font-weight: 600;
+      color: rgba(244, 247, 251, 0.98);
+    }
+
+    .refs-table a {
+      color: rgba(127, 224, 255, 0.95);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    .refs-table a:hover {
+      color: #fff;
     }
 
     .slide-chapter {
@@ -1731,6 +2096,16 @@
       .slide--cover.cover--exiting {
         animation: none !important;
       }
+      .ai-usage-dialog[open],
+      .ai-usage-dialog[open]::backdrop,
+      .ai-usage-dialog[open].ai-usage-dialog--closing,
+      .ai-usage-dialog[open].ai-usage-dialog--closing::backdrop,
+      .infra-chart-dialog[open],
+      .infra-chart-dialog[open]::backdrop,
+      .infra-chart-dialog[open].infra-chart-dialog--closing,
+      .infra-chart-dialog[open].infra-chart-dialog--closing::backdrop {
+        animation: none !important;
+      }
     }
   </style>
 </head>
@@ -1744,12 +2119,54 @@
     <span>Mở demo cờ Việt Nam điều khiển bằng tay (Three.js)</span>
   </a>
 
+  <button type="button" class="fab-ai-usage" id="btn-ai-usage" aria-haspopup="dialog" aria-controls="ai-usage-dialog" title="Khai báo sử dụng AI trong đề tài">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M12 3l-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z" />
+      <path d="M5 3v4M19 17v4M3 19h4M17 5h4" stroke-width="1.25" opacity="0.55" />
+    </svg>
+    <span class="sr-only">Mở khai báo nội dung AI nhóm đã sử dụng</span>
+  </button>
+
+  <dialog id="ai-usage-dialog" class="ai-usage-dialog" aria-labelledby="ai-usage-dialog-title">
+    <div class="ai-usage-dialog__inner">
+      <button type="button" class="ai-usage-dialog__close" id="ai-usage-dialog-close" aria-label="Đóng hộp thoại">&times;</button>
+      <h2 id="ai-usage-dialog-title">Các nội dung AI nhóm đã sử dụng</h2>
+      <p class="ai-usage-dialog__lead">Trang này chỉ ghi nhận các hạng mục AI đã dùng trong đề tài. AI đóng vai trò hỗ trợ; toàn bộ nội dung học thuật cuối cùng do nhóm kiểm tra, chỉnh sửa và chịu trách nhiệm.</p>
+      <ol class="ai-usage-dialog__list">
+        <li><strong>NoteLM</strong> — dùng để lấy nội dung (tóm tắt, gợi ý, khung ý) làm điểm xuất phát; nhóm biên soạn lại, bổ sung lập luận và đối chiếu với giáo trình LLCT cùng nguồn chính thống.</li>
+        <li><strong>Gemini</strong> — dùng để tạo ảnh minh họa; nhóm chọn phiên bản phù hợp, chỉnh sửa/ghi chú ngữ cảnh và đảm bảo ảnh không làm sai lệch nội dung học thuật.</li>
+        <li><strong>Gamma</strong> — dùng tính năng generate slide để lấy ý tưởng bố cục và trình bày; toàn bộ nội dung chữ trên slide trình chiếu cuối do nhóm hoàn thiện và kiểm chứng.</li>
+      </ol>
+      <p class="ai-usage-dialog__foot"><strong>Cam kết:</strong> không để AI thay thế hoàn toàn bài tập; có phân định rõ phần AI hỗ trợ và phần nhóm tự chỉnh sửa. Nhóm chịu trách nhiệm về tính chính xác và bản nộp cuối cùng.</p>
+    </div>
+  </dialog>
+
+  <dialog id="infra-chart-dialog" class="infra-chart-dialog" aria-labelledby="infra-chart-dialog-title">
+    <div class="infra-chart-dialog__inner">
+      <button type="button" class="ai-usage-dialog__close" id="infra-chart-dialog-close" aria-label="Đóng hộp thoại">&times;</button>
+      <h2 id="infra-chart-dialog-title">Minh họa: Cấu trúc của Cơ sở hạ tầng</h2>
+      <figure class="infra-chart-dialog__figure">
+        <img class="infra-chart-dialog__img" src="assets/đn.jpg" alt="Sơ đồ cấu trúc ba tầng quan hệ sản xuất trong cơ sở hạ tầng theo triết học Mác–Lênin" decoding="async" loading="lazy" />
+      </figure>
+    </div>
+  </dialog>
+
+  <dialog id="kttt-chart-dialog" class="infra-chart-dialog" aria-labelledby="kttt-chart-dialog-title">
+    <div class="infra-chart-dialog__inner">
+      <button type="button" class="ai-usage-dialog__close" id="kttt-chart-dialog-close" aria-label="Đóng hộp thoại">&times;</button>
+      <h2 id="kttt-chart-dialog-title">Minh họa: Kiến trúc thượng tầng (bản chất &amp; vận động)</h2>
+      <figure class="infra-chart-dialog__figure">
+        <img class="infra-chart-dialog__img" src="assets/tt.jpg" alt="Sơ đồ kiến trúc thượng tầng: cấu trúc hệ thống và mối quan hệ biện chứng với cơ sở hạ tầng" decoding="async" loading="lazy" />
+      </figure>
+    </div>
+  </dialog>
+
   <div class="slide-nav" id="slide-nav">
     <!-- Will be populated by JS -->
   </div>
 
   <div class="slide-counter" id="slide-counter">
-    <span id="current-slide">01</span> / <span id="total-slides">10</span>
+    <span id="current-slide">01</span> / <span id="total-slides">11</span>
   </div>
 
   <div class="deck" id="deck">
@@ -1840,6 +2257,13 @@
                 <span class="toc-meta">Liên hệ lý thuyết — thực tiễn — Gen Z</span>
               </div>
             </li>
+            <li class="toc-node gsap-reveal" data-target="10" role="button" tabindex="0">
+              <span class="toc-num" aria-hidden="true">10</span>
+              <div class="toc-node-body">
+                <strong>Tài liệu tham khảo</strong>
+                <span class="toc-meta">Nguồn trích dẫn (APA)</span>
+              </div>
+            </li>
           </ul>
         </nav>
       </div>
@@ -1896,6 +2320,7 @@
         </div>
         <p class="lead lead--after-list gsap-reveal">QHSX thống trị <strong>luôn chủ đạo</strong>, quy định xu hướng chung của đời sống kinh tế – xã hội.</p>
         <p class="cite-footer gsap-reveal">Giáo trình (2021), tr. 137.</p>
+        <button type="button" class="btn-slide-secondary gsap-reveal" id="btn-infra-chart" aria-haspopup="dialog" aria-controls="infra-chart-dialog">Xem ảnh</button>
       </div>
     </section>
 
@@ -1905,8 +2330,8 @@
         <span class="milestone gsap-reveal"><span class="milestone__text">Trang 3 · Kiến trúc thượng tầng</span></span>
         <h2 class="gsap-reveal">Định nghĩa</h2>
         <p class="lead gsap-reveal">Kiến trúc thượng tầng là <strong>toàn bộ</strong> những <strong>quan điểm, tư tưởng xã hội</strong> (hình thái ý thức xã hội) với những <strong>thiết chế xã hội tương ứng</strong>, cùng các <strong>quan hệ nội tại</strong> của thượng tầng, hình thành trên một <strong>cơ sở hạ tầng nhất định</strong>.</p>
-        <p class="lead lead--note gsap-reveal"><strong>Minh họa:</strong> có thể chèn ảnh sơ đồ CSHT — KTTT vào thư mục <code>assets/</code> và dùng khối <code>figure</code> ở phiên bản sau của slide này.</p>
         <p class="cite-footer gsap-reveal">Giáo trình (2021), tr. 137.</p>
+        <button type="button" class="btn-slide-secondary gsap-reveal" id="btn-kttt-chart" aria-haspopup="dialog" aria-controls="kttt-chart-dialog">Xem ảnh</button>
       </div>
     </section>
 
@@ -1997,6 +2422,63 @@
           </div>
         </div>
         <p class="lead lead--after-list gsap-reveal"><strong>Gen Z &amp; kinh tế số:</strong> CSHT (hạ tầng số, thị trường lao động, nền tảng công nghệ) tạo điều kiện hình thành KTTT mới (tư duy đổi mới, khởi nghiệp); ngược lại, KTTT thúc đẩy đổi mới mô hình kinh doanh — cần đối chiếu thêm <strong>nguồn thống kê &amp; báo cáo chính thống</strong> khi trích dẫn số liệu.</p>
+      </div>
+    </section>
+
+    <!-- 10 · Tài liệu tham khảo -->
+    <section class="slide slide--content no-media slide--refs" data-i="10">
+      <div class="slide-main">
+        <span class="milestone gsap-reveal"><span class="milestone__text">Phụ lục · Nguồn trích dẫn</span></span>
+        <h2 class="gsap-reveal">Tài liệu tham khảo</h2>
+        <div class="refs-table-wrap gsap-reveal">
+          <table class="refs-table">
+            <caption class="sr-only">Bảng nguồn trích dẫn: STT, tên nguồn, trích dẫn APA</caption>
+            <thead>
+              <tr>
+                <th scope="col" class="col-stt">STT</th>
+                <th scope="col" class="col-source">Nguồn</th>
+                <th scope="col">Trích dẫn theo APA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-stt">1</td>
+                <td class="col-source">Luật Đất đai 2024</td>
+                <td>Quốc hội nước CHXHCN Việt Nam. (2024). <em>Luật Đất đai</em> số 31/2024/QH15. Hà Nội: Văn phòng Quốc hội.</td>
+              </tr>
+              <tr>
+                <td class="col-stt">2</td>
+                <td class="col-source">Nghị quyết 57-NQ/TW</td>
+                <td>Bộ Chính trị. (2024). Nghị quyết số 57-NQ/TW ngày 22/12/2024 về đột phá phát triển khoa học, công nghệ, đổi mới sáng tạo và chuyển đổi số quốc gia. Hà Nội: Văn phòng Trung ương Đảng.</td>
+              </tr>
+              <tr>
+                <td class="col-stt">3</td>
+                <td class="col-source">Báo cáo kinh tế số</td>
+                <td>Bộ Thông tin và Truyền thông. (2024). <em>Báo cáo kinh tế số Việt Nam 2024</em>. Hà Nội: Cục Tin học hóa.</td>
+              </tr>
+              <tr>
+                <td class="col-stt">4</td>
+                <td class="col-source">Nghiên cứu Gen Z</td>
+                <td>Zhang, Y., &amp; Liu, H. (2023). Gen Z and Digital Economy in Southeast Asia. <em>Journal of Asian Development Studies</em>, <em>15</em>(2), 45–67.</td>
+              </tr>
+              <tr>
+                <td class="col-stt">5</td>
+                <td class="col-source">Số liệu TCTK</td>
+                <td>Tổng cục Thống kê. (2025). Thông cáo báo chí tình hình kinh tế – xã hội quý IV và năm 2024. Hà Nội: TCTK.<br /><a href="https://www.nso.gov.vn" rel="noopener noreferrer" target="_blank">www.nso.gov.vn</a></td>
+              </tr>
+              <tr>
+                <td class="col-stt">6</td>
+                <td class="col-source">Giáo trình Triết học</td>
+                <td>Bộ Giáo dục và Đào tạo. (2021). <em>Giáo trình Triết học Mác-Lênin</em>. Hà Nội: Nxb. Chính trị quốc gia Sự thật, tr. 137–141.</td>
+              </tr>
+              <tr>
+                <td class="col-stt">7</td>
+                <td class="col-source">Video minh họa (YouTube)</td>
+                <td><em>CSHT và KTTT – Triết học Mác – Lênin | Nhiều ví dụ dễ hiểu</em> [Video]. YouTube. <a href="https://youtu.be/V97efKwPGGo?si=8ZNf5R12SiWd8ttM" rel="noopener noreferrer" target="_blank">https://youtu.be/V97efKwPGGo?si=8ZNf5R12SiWd8ttM</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -2173,8 +2655,181 @@
         });
       }
 
+      const aiUsageBtn = document.getElementById("btn-ai-usage");
+      const aiUsageDlg = document.getElementById("ai-usage-dialog");
+      const aiUsageClose = document.getElementById("ai-usage-dialog-close");
+      if (aiUsageBtn && aiUsageDlg) {
+        const isDialogOpen = () =>
+          (typeof aiUsageDlg.open === "boolean" && aiUsageDlg.open) || aiUsageDlg.hasAttribute("open");
+
+        const finishClose = () => {
+          aiUsageDlg.classList.remove("ai-usage-dialog--closing");
+          if (typeof aiUsageDlg.close === "function") aiUsageDlg.close();
+          else aiUsageDlg.removeAttribute("open");
+        };
+
+        const closeDlgAnimated = () => {
+          if (!isDialogOpen()) return;
+          if (aiUsageDlg.classList.contains("ai-usage-dialog--closing")) return;
+          if (typeof aiUsageDlg.showModal !== "function") {
+            finishClose();
+            return;
+          }
+          aiUsageDlg.classList.add("ai-usage-dialog--closing");
+          const onEnd = (e) => {
+            if (e.target !== aiUsageDlg) return;
+            if (e.animationName !== "ai-dialog-out") return;
+            aiUsageDlg.removeEventListener("animationend", onEnd);
+            finishClose();
+          };
+          aiUsageDlg.addEventListener("animationend", onEnd);
+          window.setTimeout(() => {
+            if (!aiUsageDlg.classList.contains("ai-usage-dialog--closing")) return;
+            aiUsageDlg.removeEventListener("animationend", onEnd);
+            finishClose();
+          }, 400);
+        };
+
+        const openDlg = () => {
+          aiUsageDlg.classList.remove("ai-usage-dialog--closing");
+          if (typeof aiUsageDlg.showModal === "function") aiUsageDlg.showModal();
+          else aiUsageDlg.setAttribute("open", "");
+        };
+
+        aiUsageBtn.addEventListener("click", openDlg);
+        aiUsageClose?.addEventListener("click", () => closeDlgAnimated());
+        aiUsageDlg.addEventListener("click", (e) => {
+          if (e.target === aiUsageDlg) closeDlgAnimated();
+        });
+        aiUsageDlg.addEventListener("cancel", (e) => {
+          e.preventDefault();
+          closeDlgAnimated();
+        });
+      }
+
+      const infraChartBtn = document.getElementById("btn-infra-chart");
+      const infraChartDlg = document.getElementById("infra-chart-dialog");
+      const infraChartClose = document.getElementById("infra-chart-dialog-close");
+      if (infraChartBtn && infraChartDlg) {
+        const isInfraOpen = () =>
+          (typeof infraChartDlg.open === "boolean" && infraChartDlg.open) ||
+          infraChartDlg.hasAttribute("open");
+
+        const finishInfraClose = () => {
+          infraChartDlg.classList.remove("infra-chart-dialog--closing");
+          if (typeof infraChartDlg.close === "function") infraChartDlg.close();
+          else infraChartDlg.removeAttribute("open");
+        };
+
+        const closeInfraAnimated = () => {
+          if (!isInfraOpen()) return;
+          if (infraChartDlg.classList.contains("infra-chart-dialog--closing")) return;
+          if (typeof infraChartDlg.showModal !== "function") {
+            finishInfraClose();
+            return;
+          }
+          infraChartDlg.classList.add("infra-chart-dialog--closing");
+          const onEnd = (ev) => {
+            if (ev.target !== infraChartDlg) return;
+            if (ev.animationName !== "ai-dialog-out") return;
+            infraChartDlg.removeEventListener("animationend", onEnd);
+            finishInfraClose();
+          };
+          infraChartDlg.addEventListener("animationend", onEnd);
+          window.setTimeout(() => {
+            if (!infraChartDlg.classList.contains("infra-chart-dialog--closing")) return;
+            infraChartDlg.removeEventListener("animationend", onEnd);
+            finishInfraClose();
+          }, 400);
+        };
+
+        const openInfra = () => {
+          infraChartDlg.classList.remove("infra-chart-dialog--closing");
+          if (typeof infraChartDlg.showModal === "function") infraChartDlg.showModal();
+          else infraChartDlg.setAttribute("open", "");
+        };
+
+        infraChartBtn.addEventListener("click", openInfra);
+        infraChartClose?.addEventListener("click", () => closeInfraAnimated());
+        infraChartDlg.addEventListener("click", (e) => {
+          if (e.target === infraChartDlg) closeInfraAnimated();
+        });
+        infraChartDlg.addEventListener("cancel", (e) => {
+          e.preventDefault();
+          closeInfraAnimated();
+        });
+      }
+
+      const ktttChartBtn = document.getElementById("btn-kttt-chart");
+      const ktttChartDlg = document.getElementById("kttt-chart-dialog");
+      const ktttChartClose = document.getElementById("kttt-chart-dialog-close");
+      if (ktttChartBtn && ktttChartDlg) {
+        const isKtttOpen = () =>
+          (typeof ktttChartDlg.open === "boolean" && ktttChartDlg.open) ||
+          ktttChartDlg.hasAttribute("open");
+
+        const finishKtttClose = () => {
+          ktttChartDlg.classList.remove("infra-chart-dialog--closing");
+          if (typeof ktttChartDlg.close === "function") ktttChartDlg.close();
+          else ktttChartDlg.removeAttribute("open");
+        };
+
+        const closeKtttAnimated = () => {
+          if (!isKtttOpen()) return;
+          if (ktttChartDlg.classList.contains("infra-chart-dialog--closing")) return;
+          if (typeof ktttChartDlg.showModal !== "function") {
+            finishKtttClose();
+            return;
+          }
+          ktttChartDlg.classList.add("infra-chart-dialog--closing");
+          const onEndK = (ev) => {
+            if (ev.target !== ktttChartDlg) return;
+            if (ev.animationName !== "ai-dialog-out") return;
+            ktttChartDlg.removeEventListener("animationend", onEndK);
+            finishKtttClose();
+          };
+          ktttChartDlg.addEventListener("animationend", onEndK);
+          window.setTimeout(() => {
+            if (!ktttChartDlg.classList.contains("infra-chart-dialog--closing")) return;
+            ktttChartDlg.removeEventListener("animationend", onEndK);
+            finishKtttClose();
+          }, 400);
+        };
+
+        const openKttt = () => {
+          ktttChartDlg.classList.remove("infra-chart-dialog--closing");
+          if (typeof ktttChartDlg.showModal === "function") ktttChartDlg.showModal();
+          else ktttChartDlg.setAttribute("open", "");
+        };
+
+        ktttChartBtn.addEventListener("click", openKttt);
+        ktttChartClose?.addEventListener("click", () => closeKtttAnimated());
+        ktttChartDlg.addEventListener("click", (e) => {
+          if (e.target === ktttChartDlg) closeKtttAnimated();
+        });
+        ktttChartDlg.addEventListener("cancel", (e) => {
+          e.preventDefault();
+          closeKtttAnimated();
+        });
+      }
+
+      const isModalDialogOpen = (id) => {
+        const el = document.getElementById(id);
+        return (
+          el &&
+          ((typeof el.open === "boolean" && el.open) || el.hasAttribute("open"))
+        );
+      };
+
       // Keyboard Assist
       window.addEventListener("keydown", (e) => {
+        if (
+          isModalDialogOpen("ai-usage-dialog") ||
+          isModalDialogOpen("infra-chart-dialog") ||
+          isModalDialogOpen("kttt-chart-dialog")
+        ) {
+          return;
+        }
         const activeSlideIndex = getActiveSlideIndex();
         if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "PageDown") {
           e.preventDefault();
